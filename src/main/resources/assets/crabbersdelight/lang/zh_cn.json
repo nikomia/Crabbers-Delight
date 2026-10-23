@@ -122,67 +122,20 @@
   "block.crabbersdelight.scute_block": "鳞甲块",
   "block.crabbersdelight.sea_pickle_crate": "箱装海泡菜",
   "block.crabbersdelight.seashells": "贝壳",
-  "block.crabbersdelight.fish_plaque": "鱼牌",
-  "block.crabbersdelight.note_block": "便笺",
-  "block.crabbersdelight.tackle_box": "钓具盒",
-  "block.crabbersdelight.worm_bin": "蚯蚓箱",
-  "block.crabbersdelight.wormy_dirt": "含有蚯蚓的泥土",
 
   "block.crabbersdelight.life_preserver": "救生圈",
   "tooltip.crabbersdelight.life_preserver.desc": "装备时允许玩家在水面上漂浮",
 
-  "item.crabbersdelight.note": "便笺",
-  "item.crabbersdelight.signed_note": "签名便笺",
-  "item.crabbersdelight.signed_note.author": "%s著",
-  "item.crabbersdelight.message_bottle": "瓶中信",
-  "item.crabbersdelight.bottled_note": "瓶中便笺",
-  "item.crabbersdelight.message_bottle.desc": "Shift右键打开",
-  "gui.crabbersdelight.note.edit": "编写便笺",
-  "gui.crabbersdelight.note.placeholder": "写点什么……",
-  "gui.crabbersdelight.note.sign": "签名",
-  "gui.crabbersdelight.note.read": "便笺",
-  "gui.crabbersdelight.note.editTitle": "输入便笺标题",
-  "gui.crabbersdelight.note.finalizeWarning": "便笺签名后不可再更改",
-  "gui.crabbersdelight.note.generation.original": "原版",
-  "gui.crabbersdelight.note.generation.copy": "原版的副本",
-  "gui.crabbersdelight.note.generation.copy_of_copy": "副本的副本",
-  "gui.crabbersdelight.note.generation.tattered": "破损",
 
-  "tooltip.crabbersdelight.fish_size.tiny": "超小",
-  "tooltip.crabbersdelight.fish_size.small": "小",
-  "tooltip.crabbersdelight.fish_size.regular": "普通",
-  "tooltip.crabbersdelight.fish_size.large": "大",
-  "tooltip.crabbersdelight.fish_size.huge": "巨大",
 
-  "item.crabbersdelight.tackle_box": "钓具盒",
-  "item.crabbersdelight.tackle_box.lure": "假饵：%s",
-  "item.crabbersdelight.tackle_box.line": "鱼线：%s",
-  "item.crabbersdelight.tackle_box.bait": "鱼饵：%s",
   "item.crabbersdelight.crab_trap.bait": "诱饵：%s",
-  "gui.crabbersdelight.tackle_box.lure_slot": "假饵",
-  "gui.crabbersdelight.tackle_box.line_slot": "鱼线",
-  "gui.crabbersdelight.tackle_box.bait_slot": "鱼饵",
 
-  "item.crabbersdelight.barbed_lure": "倒刺钩",
-  "tooltip.crabbersdelight.barbed_lure.desc": "延长收线的时间窗口",
 
-  "item.crabbersdelight.double_lure": "双倍饵",
-  "tooltip.crabbersdelight.double_lure.desc": "双倍渔获",
 
-  "item.crabbersdelight.magnetic_lure": "渔用磁铁",
-  "tooltip.crabbersdelight.magnetic_lure.desc": "提升钓起宝藏的概率",
 
-  "item.crabbersdelight.automatic_lure": "自动饵",
-  "tooltip.crabbersdelight.automatic_lure.desc": "上钩时自动收线",
 
-  "item.crabbersdelight.storm_lure": "风暴饵",
-  "tooltip.crabbersdelight.storm_lure.desc": "在雨中获得额外幸运值，在雷暴中获得更多",
 
-  "item.crabbersdelight.fishing_line": "鱼线",
-  "tooltip.crabbersdelight.fishing_line.desc": "提升最大甩竿距离",
 
-  "item.crabbersdelight.worm": "蚯蚓",
-  "item.crabbersdelight.worm_bin": "蚯蚓箱",
 
   "item.crabbersdelight.conch": "海螺",
   "tooltip.crabbersdelight.conch.desc": "放在耳边，聆听大海的声音",
@@ -210,8 +163,6 @@
   "entity.crabbersdelight.crab": "螃蟹",
 
   "crabbersdelight.jei.crab_trap_loot": "捕蟹笼",
-  "gui.crabbersdelight.jei.note_cloning": "复制便笺",
-  "gui.crabbersdelight.jei.bottled_note": "便笺装瓶",
 
   "crabbersdelight.advancement.root": "蟹农乐事",
   "crabbersdelight.advancement.root.desc": "一场海鲜冒险在等着你！",
@@ -243,14 +194,8 @@
   "crabbersdelight.advancement.glow_squid_killer": "渊洋杀手",
   "crabbersdelight.advancement.glow_squid_killer.desc": "用刀从发光鱿鱼身上切下发光鱿鱼须",
 
-  "crabbersdelight.advancement.gone_fishin": "钓鱼佬",
-  "crabbersdelight.advancement.gone_fishin.desc": "制作钓具盒来使用各种饵",
 
-  "crabbersdelight.advancement.master_baiter": "打窝仙人",
-  "crabbersdelight.advancement.master_baiter.desc": "在钓鱼时使用鱼饵",
 
-  "crabbersdelight.advancement.they_pay_me_in_woims": "陈年老蚯蚓",
-  "crabbersdelight.advancement.they_pay_me_in_woims.desc": "制作一个蚯蚓箱来生成更多蚯蚓",
 
   "crabbersdelight.advancement.castaway_couture": "漂流者的针线活",
   "crabbersdelight.advancement.castaway_couture.desc": "想办法把椰子戴到头上",

@@ -1,8 +1,6 @@
 package alabaster.crabbersdelight.common.registry;
 
 import alabaster.crabbersdelight.CrabbersDelight;
-import alabaster.crabbersdelight.common.recipe.BottledNoteRecipe;
-import alabaster.crabbersdelight.common.recipe.NoteCloningRecipe;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.StreamCodec;
@@ -22,9 +20,5 @@ public class CDModRecipeSerializers {
     public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS =
             DeferredRegister.create(Registries.RECIPE_SERIALIZER, CrabbersDelight.MODID);
 
-    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<NoteCloningRecipe>> NOTE_CLONING =
-            RECIPE_SERIALIZERS.register("note_cloning", () -> unit(NoteCloningRecipe::new));
 
-    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<BottledNoteRecipe>> BOTTLED_NOTE =
-            RECIPE_SERIALIZERS.register("bottled_note", () -> unit(BottledNoteRecipe::new));
 }

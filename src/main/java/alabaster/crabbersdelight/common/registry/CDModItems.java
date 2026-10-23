@@ -3,7 +3,6 @@ package alabaster.crabbersdelight.common.registry;
 import alabaster.crabbersdelight.CrabbersDelight;
 import alabaster.crabbersdelight.common.CDFoodValues;
 import alabaster.crabbersdelight.common.item.*;
-import alabaster.crabbersdelight.common.item.fishing.LureEffect;
 import alabaster.crabbersdelight.common.tags.CDModTags;
 import com.google.common.collect.Sets;
 import net.minecraft.core.Direction;
@@ -132,17 +131,6 @@ public class CDModItems {
 
     // Fishing & Crabbing
     public static final DeferredItem<CrabTrapItem> CRAB_TRAP = registerWithTab("crab_trap", CrabTrapItem::new, () -> new Item.Properties().useBlockDescriptionPrefix());
-    public static final DeferredItem<BlockItem> FISH_PLAQUE = blockItem("fish_plaque", CDModBlocks.FISH_PLAQUE);
-    public static final DeferredItem<TackleBoxItem> TACKLE_BOX = registerWithTab("tackle_box", TackleBoxItem::new, () -> new Item.Properties().stacksTo(1).useBlockDescriptionPrefix());
-    public static final DeferredItem<LureItem> BARBED_LURE = registerWithTab("barbed_lure", p -> new LureItem(p, LureEffect.BARBED), LureItem::properties);
-    public static final DeferredItem<LureItem> DOUBLE_LURE = registerWithTab("double_lure", p -> new LureItem(p, LureEffect.DOUBLE), LureItem::properties);
-    public static final DeferredItem<LureItem> MAGNETIC_LURE = registerWithTab("magnetic_lure", p -> new LureItem(p, LureEffect.MAGNETIC), LureItem::properties);
-    public static final DeferredItem<LureItem> AUTOMATIC_LURE = registerWithTab("automatic_lure", p -> new LureItem(p, LureEffect.AUTOMATIC), LureItem::properties);
-    public static final DeferredItem<LureItem> STORM_LURE = registerWithTab("storm_lure", p -> new LureItem(p, LureEffect.STORM), LureItem::properties);
-    public static final DeferredItem<FishingLineItem> FISHING_LINE = registerWithTab("fishing_line", FishingLineItem::new, () -> new Item.Properties().stacksTo(1).durability(64));
-    public static final DeferredItem<WormItem> WORM = registerWithTab("worm", WormItem::new);
-    public static final DeferredItem<BlockItem> WORMY_DIRT = blockItem("wormy_dirt", CDModBlocks.WORMY_DIRT);
-    public static final DeferredItem<BlockItem> WORM_BIN = blockItem("worm_bin", CDModBlocks.WORM_BIN);
 
     // Palm
     public static final DeferredItem<BlockItem> PALM_LOG = blockItem("palm_log", CDModBlocks.PALM_LOG, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
@@ -259,8 +247,4 @@ public class CDModItems {
     public static final DeferredItem<BlockItem> SEA_PICKLE_CRATE = blockItem("sea_pickle_crate", CDModBlocks.SEA_PICKLE_CRATE);
 
     // Notes + Messages in a Bottle
-    public static final DeferredItem<NoteItem> NOTE = registerWithTab("note", NoteItem::new, () -> new Item.Properties().stacksTo(16));
-    public static final DeferredItem<SignedNoteItem> SIGNED_NOTE = registerWithTab("signed_note", SignedNoteItem::new, () -> new Item.Properties().stacksTo(16));
-    public static final DeferredItem<MessageBottleItem> MESSAGE_BOTTLE = registerWithTab("message_bottle", MessageBottleItem::new);
-    public static final DeferredItem<BottledNoteItem> BOTTLED_NOTE = registerWithTab("bottled_note", BottledNoteItem::new, () -> new Item.Properties().stacksTo(16));
 }

@@ -2,7 +2,6 @@ package alabaster.crabbersdelight.common.registry;
 
 import alabaster.crabbersdelight.CrabbersDelight;
 import alabaster.crabbersdelight.common.block.*;
-import alabaster.crabbersdelight.common.block.NoteBlock;
 import alabaster.crabbersdelight.common.worldgen.tree.CDTreeGrowers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,14 +29,8 @@ public class CDModBlocks {
     public static final DeferredBlock<Block> CRAB_TRAP = BLOCKS.registerBlock("crab_trap", CrabTrapBlock::new,
             CDModBlocks::woodenStorage);
 
-    public static final DeferredBlock<Block> FISH_PLAQUE = BLOCKS.registerBlock("fish_plaque", FishPlaqueBlock::new,
-            () -> BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).sound(SoundType.WOOD).noOcclusion());
 
-    public static final DeferredBlock<Block> NOTE_BLOCK = BLOCKS.registerBlock("note_block", NoteBlock::new,
-            () -> BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).sound(SoundType.WOOD).noOcclusion().strength(0.1F).noLootTable());
 
-    public static final DeferredBlock<Block> TACKLE_BOX = BLOCKS.registerBlock("tackle_box", TackleBoxBlock::new,
-            () -> BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).sound(SoundType.WOOD).noOcclusion().strength(2.5F).noLootTable());
 
     // Palm Tree
     public static final DeferredBlock<Block> PALM_LOG = BLOCKS.registerBlock("palm_log", CDLogBlock::new,
@@ -148,10 +141,6 @@ public class CDModBlocks {
     public static final DeferredBlock<Block> SCUTE_BLOCK = BLOCKS.registerBlock("scute_block", Block::new, CDModBlocks::shellStorage);
     public static final DeferredBlock<Block> SEA_PICKLE_CRATE = BLOCKS.registerBlock("sea_pickle_crate", SlabBlock::new, CDModBlocks::woodenStorage);
 
-    public static final DeferredBlock<Block> WORM_BIN = BLOCKS.registerBlock("worm_bin", WormBinBlock::new,
-            () -> BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).strength(2.0F).sound(SoundType.WOOD));
-    public static final DeferredBlock<Block> WORMY_DIRT = BLOCKS.registerBlock("wormy_dirt", Block::new,
-            () -> BlockBehaviour.Properties.ofFullCopy(Blocks.DIRT));
 
     // Life Preserver
     public static final DeferredBlock<Block> LIFE_PRESERVER = BLOCKS.registerBlock("life_preserver", LifePreserverBlock::new,

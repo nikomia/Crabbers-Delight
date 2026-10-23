@@ -39,10 +39,6 @@
         },
         {
           "type": "minecraft:item",
-          "name": "crabbersdelight:message_bottle"
-        },
-        {
-          "type": "minecraft:item",
           "name": "crabbersdelight:coral_fragments",
           "weight": 3
         }

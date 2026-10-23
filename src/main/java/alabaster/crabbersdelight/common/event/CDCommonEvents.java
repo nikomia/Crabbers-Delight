@@ -2,7 +2,6 @@ package alabaster.crabbersdelight.common.event;
 
 import alabaster.crabbersdelight.CrabbersDelight;
 import alabaster.crabbersdelight.common.block.entity.inventory.CrabTrapItemHandler;
-import alabaster.crabbersdelight.common.block.entity.inventory.WormBinItemHandler;
 import alabaster.crabbersdelight.common.entity.crab.CrabEntity;
 import alabaster.crabbersdelight.common.registry.CDModBlockEntity;
 import alabaster.crabbersdelight.common.registry.CDModBlocks;
@@ -55,12 +54,6 @@ public class CDCommonEvents {
             return side == Direction.UP
                     ? RangedResourceHandler.ofSingleIndex(handler, 0)
                     : RangedResourceHandler.of(handler, 1, CrabTrapItemHandler.SLOTS);
-        });
-        event.registerBlockEntity(Capabilities.Item.BLOCK, CDModBlockEntity.TACKLE_BOX.get(),
-                (be, side) -> new ItemHandlerResourceHandler(be.handler));
-        event.registerBlockEntity(Capabilities.Item.BLOCK, CDModBlockEntity.WORM_BIN.get(), (be, side) -> {
-            ItemHandlerResourceHandler handler = new ItemHandlerResourceHandler(be.getHandler());
-            return RangedResourceHandler.ofSingleIndex(handler, side == Direction.UP ? WormBinItemHandler.FUEL_SLOT : WormBinItemHandler.WORM_SLOT);
         });
     }
 }

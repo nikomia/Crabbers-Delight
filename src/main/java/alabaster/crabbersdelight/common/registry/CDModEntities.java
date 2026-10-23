@@ -2,9 +2,7 @@ package alabaster.crabbersdelight.common.registry;
 
 import alabaster.crabbersdelight.CrabbersDelight;
 import alabaster.crabbersdelight.common.entity.LifePreserverSeat;
-import alabaster.crabbersdelight.common.entity.ThrownBottledNote;
 import alabaster.crabbersdelight.common.entity.crab.CrabEntity;
-import alabaster.crabbersdelight.common.fishingspot.FishingSpotEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
@@ -36,11 +34,7 @@ public class CDModEntities {
             (type, level) -> new ChestBoat(type, level, () -> CDModItems.PALM_CHEST_BOAT.get()), MobCategory.MISC,
             b -> b.noLootTable().sized(1.375f, 0.5625f).eyeHeight(0.5625F).clientTrackingRange(10));
 
-    public static final DeferredHolder<EntityType<?>, EntityType<ThrownBottledNote>> THROWN_BOTTLED_NOTE = register("thrown_bottled_note",
-            ThrownBottledNote::new, MobCategory.MISC, b -> b.sized(0.25f, 0.25f).clientTrackingRange(4).updateInterval(10));
 
-    public static final DeferredHolder<EntityType<?>, EntityType<FishingSpotEntity>> FISHING_SPOT = register("fishing_spot",
-            FishingSpotEntity::new, MobCategory.MISC, b -> b.sized(0.1f, 0.1f).noSave().clientTrackingRange(6).updateInterval(40));
 
     public static final DeferredHolder<EntityType<?>, EntityType<LifePreserverSeat>> LIFE_PRESERVER_SEAT = register("life_preserver_seat",
             LifePreserverSeat::new, MobCategory.MISC, b -> b.sized(0.1f, 0.1f).noSave().clientTrackingRange(6).updateInterval(40));

@@ -2,7 +2,6 @@ package alabaster.crabbersdelight.common.registry;
 
 import alabaster.crabbersdelight.CrabbersDelight;
 import alabaster.crabbersdelight.common.worldgen.RandomSeashellStateProvider;
-import alabaster.crabbersdelight.common.worldgen.WormyDirtFeature;
 import alabaster.crabbersdelight.common.worldgen.placement.CDConfigPlacementModifier;
 import alabaster.crabbersdelight.common.worldgen.tree.PalmFoliagePlacer;
 import alabaster.crabbersdelight.common.worldgen.tree.PalmTrunkPlacer;
@@ -31,8 +30,6 @@ public class CDModFeatures {
     public static final DeferredRegister<FoliagePlacerType<?>> FOLIAGE_PLACERS =
             DeferredRegister.create(Registries.FOLIAGE_PLACER_TYPE, CrabbersDelight.MODID);
 
-    public static final DeferredHolder<MapCodec<? extends Feature>, MapCodec<WormyDirtFeature>> WORMY_DIRT_FEATURE =
-            FEATURES.register("wormy_dirt", () -> WormyDirtFeature.CODEC);
 
     public static final DeferredHolder<MapCodec<? extends PlacementModifier>, MapCodec<CDConfigPlacementModifier>> CONFIG_FILTER =
             PLACEMENT_MODIFIERS.register("config_filter", () -> CDConfigPlacementModifier.CODEC);

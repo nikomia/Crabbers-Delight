@@ -38,10 +38,6 @@
           "type": "minecraft:item",
           "name": "crabbersdelight:fish_bones",
           "weight": 4
-        },
-        {
-          "type": "minecraft:item",
-          "name": "crabbersdelight:message_bottle"
         }
       ],
       "rolls": 1.0

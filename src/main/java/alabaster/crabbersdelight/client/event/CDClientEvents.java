@@ -2,7 +2,6 @@ package alabaster.crabbersdelight.client.event;
 
 import alabaster.crabbersdelight.CrabbersDelight;
 import alabaster.crabbersdelight.client.gui.CrabTrapGUI;
-import alabaster.crabbersdelight.client.gui.TackleBoxGUI;
 import alabaster.crabbersdelight.client.renderer.*;
 import alabaster.crabbersdelight.common.entity.boat.CDBoatModelLayers;
 import alabaster.crabbersdelight.common.entity.crab.CrabModel;
@@ -43,7 +42,6 @@ public class CDClientEvents {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(alabaster.crabbersdelight.common.registry.CDModMenus.CRAB_TRAP_MENU.get(), CrabTrapGUI::new);
-        event.register(alabaster.crabbersdelight.common.registry.CDModMenus.TACKLE_BOX_MENU.get(), TackleBoxGUI::new);
     }
 
     @SubscribeEvent
@@ -58,12 +56,8 @@ public class CDClientEvents {
         event.registerEntityRenderer(CDModEntities.CRAB.get(), CrabRenderer::new);
         event.registerEntityRenderer(CDModEntities.PALM_BOAT.get(), context -> new BoatRenderer(context, CDBoatModelLayers.PALM_BOAT_LAYER));
         event.registerEntityRenderer(CDModEntities.PALM_CHEST_BOAT.get(), context -> new BoatRenderer(context, CDBoatModelLayers.PALM_CHEST_BOAT_LAYER));
-        event.registerEntityRenderer(CDModEntities.THROWN_BOTTLED_NOTE.get(), ThrownItemRenderer::new);
-        event.registerEntityRenderer(EntityTypes.FISHING_BOBBER, LureAwareFishingHookRenderer::new);
-        event.registerEntityRenderer(CDModEntities.FISHING_SPOT.get(), FishingSpotRenderer::new);
         event.registerEntityRenderer(CDModEntities.LIFE_PRESERVER_SEAT.get(), NoopRenderer::new);
 
-        event.registerBlockEntityRenderer(CDModBlockEntity.FISH_PLAQUE.get(), FishPlaqueRenderer::new);
         event.registerBlockEntityRenderer(CDModBlockEntity.CRAB_TRAP.get(), CrabTrapRenderer::new);
     }
 

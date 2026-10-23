@@ -11,9 +11,6 @@ description='''A maritime addon for Farmer's Delight!'''
 displayURL="https://modrinth.com/mod/crabbers-delight"
 bannerFile="logo.png"
 
-[[mixins]]
-config = "crabbersdelight.mixins.json"
-
 [[dependencies.crabbersdelight]]
 modId="neoforge"
 type="required"

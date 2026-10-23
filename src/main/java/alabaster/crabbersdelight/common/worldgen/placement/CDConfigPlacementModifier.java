@@ -34,10 +34,6 @@ public record CDConfigPlacementModifier(String configKey) implements PlacementMo
                 enabled = Config.GENERATE_SEASHELLS.get();
                 chance = Config.CHANCE_SEASHELLS_UNDERWATER.get();
             }
-            case "wormy_dirt" -> {
-                enabled = Config.GENERATE_WORMY_DIRT.get();
-                chance = Config.CHANCE_WORMY_DIRT.get();
-            }
             default -> {
                 output.accept(origin);
                 return;
