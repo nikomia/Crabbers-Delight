@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:cooking/clam_chowder"
+        "recipes": "crabbersdelight:cooking/clam_chowder"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

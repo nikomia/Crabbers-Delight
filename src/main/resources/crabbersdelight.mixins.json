@@ -2,14 +2,14 @@
   "required": true,
   "minVersion": "0.8",
   "package": "alabaster.crabbersdelight.common.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "AbstractCookingRecipeMixin",
     "AbstractFurnaceBlockEntityMixin",
+    "SingleItemRecipeMixin",
+    "CuttingBoardBlockEntityMixin",
     "CuttingBoardRecipeMixin"
   ],
-  "client": [
-  ],
+  "client": [],
   "injectors": {
     "defaultRequire": 1
   }

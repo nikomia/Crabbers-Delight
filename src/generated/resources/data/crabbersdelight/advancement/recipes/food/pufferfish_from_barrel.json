@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:pufferfish_from_barrel"
+        "recipes": "crabbersdelight:pufferfish_from_barrel"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

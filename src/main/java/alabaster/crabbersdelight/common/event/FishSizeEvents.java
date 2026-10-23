@@ -22,7 +22,7 @@ import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 import java.util.List;
 
-@EventBusSubscriber(modid = CrabbersDelight.MODID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = CrabbersDelight.MODID)
 public class FishSizeEvents {
 
     private static final double LUCK_PER_SIZE_STEP = 3.0;
@@ -68,33 +68,6 @@ public class FishSizeEvents {
                 .withStyle(size.getColor()));
     }
 
-    @SubscribeEvent
-    public static void onFinishEatingFish(LivingEntityUseItemEvent.Finish event) {
-        if (!Config.FISH_SIZE_ENABLED.get()) {
-            return;
-        }
-        ItemStack stack = event.getItem();
-        FishSize size = stack.get(CDModDataComponents.FISH_SIZE.get());
-        if (size == null || size == FishSize.REGULAR) {
-            return;
-        }
-        FoodProperties defaultFood = stack.getItem().getDefaultInstance().get(DataComponents.FOOD);
-        if (defaultFood == null || defaultFood.effects().isEmpty()) {
-            return;
-        }
-
-        LivingEntity entity = event.getEntity();
-        RandomSource random = entity.getRandom();
-
-        for (FoodProperties.PossibleEffect possibleEffect : defaultFood.effects()) {
-            if (random.nextFloat() >= possibleEffect.probability()) {
-                continue;
-            }
-            MobEffectInstance base = possibleEffect.effectSupplier().get();
-            entity.addEffect(new MobEffectInstance(base));
-        }
-    }
-
     private static FishSize rollSize(Player player) {
         double luck = player.getAttributeValue(Attributes.LUCK);
         double center = 2.0 + luck / LUCK_PER_SIZE_STEP; // index 2 = REGULAR at neutral luck
@@ -127,13 +100,11 @@ public class FishSizeEvents {
         }
         float multiplier = size.getMultiplier();
 
+        // Effects live in the consumable component and stay untouched
         FoodProperties scaled = new FoodProperties(
                 Math.round(base.nutrition() * multiplier),
                 base.saturation() * multiplier,
-                base.canAlwaysEat(),
-                base.eatSeconds(),
-                base.usingConvertsTo(),
-                List.of()
+                base.canAlwaysEat()
         );
         stack.set(DataComponents.FOOD, scaled);
     }

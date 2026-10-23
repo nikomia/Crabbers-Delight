@@ -1,47 +1,46 @@
 package alabaster.crabbersdelight.common.block;
 
-import alabaster.crabbersdelight.CrabbersDelight;
+import net.minecraft.util.Prediction;
 import alabaster.crabbersdelight.common.block.entity.FishPlaqueBlockEntity;
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.*;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.MobBucketItem;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class FishPlaqueBlock extends BaseEntityBlock {
 
-    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
 
     private static final VoxelShape SHAPE_NORTH = Block.box(0, 3, 15, 16, 13, 16);
     private static final VoxelShape SHAPE_SOUTH = Block.box(0, 3, 0, 16, 13, 1);
@@ -51,11 +50,6 @@ public class FishPlaqueBlock extends BaseEntityBlock {
     public FishPlaqueBlock(Properties props) {
         super(props);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
-    }
-
-    @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return null;
     }
 
     @Override
@@ -75,17 +69,12 @@ public class FishPlaqueBlock extends BaseEntityBlock {
     }
 
     @Override
-    public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
-    }
-
-    @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new FishPlaqueBlockEntity(pos, state);
     }
 
-    @Nullable
-    private static EntityType<?> getEntityTypeFromBucket(MobBucketItem bucket) {
+    // MobBucketItem exposes no getter for its entity type
+    private static @Nullable EntityType<?> getEntityTypeFromBucket(MobBucketItem bucket) {
         try {
             var field = MobBucketItem.class.getDeclaredField("type");
             field.setAccessible(true);
@@ -95,21 +84,7 @@ public class FishPlaqueBlock extends BaseEntityBlock {
         }
     }
 
-    @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!state.is(newState.getBlock())) {
-            if (!level.isClientSide && level.getBlockEntity(pos) instanceof FishPlaqueBlockEntity be && be.hasFish()) {
-                ItemStack bucket = buildReturnBucket(be);
-                double x = pos.getX() + 0.5;
-                double y = pos.getY() + 0.5;
-                double z = pos.getZ() + 0.5;
-                level.addFreshEntity(new ItemEntity(level, x, y, z, bucket));
-            }
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
-    }
-
-    private static ItemStack buildReturnBucket(FishPlaqueBlockEntity be) {
+    public static ItemStack buildReturnBucket(FishPlaqueBlockEntity be) {
         if (!be.getSourceBucket().isEmpty()) {
             return be.getSourceBucket().copy();
         }
@@ -132,48 +107,50 @@ public class FishPlaqueBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        if (level.isClientSide) return ItemInteractionResult.SUCCESS;
-        if (!(level.getBlockEntity(pos) instanceof FishPlaqueBlockEntity be)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-
-        if (stack.getItem() instanceof MobBucketItem mobBucket) {
-            EntityType<?> entityType = getEntityTypeFromBucket(mobBucket);
-            if (entityType == null) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-            if (be.hasFish()) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-
-            CompoundTag extraData = new CompoundTag();
-            CustomData bucketData = stack.get(DataComponents.BUCKET_ENTITY_DATA);
-            if (bucketData != null) extraData = bucketData.copyTag();
-
-            be.setFishData(entityType, extraData, stack.copyWithCount(1));
-            sync(be, level, pos, state);
-            level.playSound(null, pos, SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, 1.0f, 1.0f);
-
-            if (!player.getAbilities().instabuild) {
-                stack.shrink(1);
-            }
-
-            return ItemInteractionResult.SUCCESS;
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!(stack.getItem() instanceof MobBucketItem mobBucket)) {
+            return InteractionResult.TRY_WITH_EMPTY_HAND;
+        }
+        if (level.isClientSide()) {
+            return InteractionResult.SUCCESS;
+        }
+        if (!(level.getBlockEntity(pos) instanceof FishPlaqueBlockEntity be)) {
+            return InteractionResult.TRY_WITH_EMPTY_HAND;
         }
 
-        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        EntityType<?> entityType = getEntityTypeFromBucket(mobBucket);
+        if (entityType == null || be.hasFish()) {
+            return InteractionResult.TRY_WITH_EMPTY_HAND;
+        }
+
+        CompoundTag extraData = new CompoundTag();
+        CustomData bucketData = stack.get(DataComponents.BUCKET_ENTITY_DATA);
+        if (bucketData != null) extraData = bucketData.copyTag();
+
+        be.setFishData(entityType, extraData, stack.copyWithCount(1));
+        sync(be, level, pos, state);
+        level.playSound(null, pos, SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, 1.0f, 1.0f);
+
+        if (!player.getAbilities().instabuild) {
+            stack.shrink(1);
+        }
+        return InteractionResult.SUCCESS;
     }
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (level.isClientSide) return InteractionResult.SUCCESS;
+        if (level.isClientSide()) return InteractionResult.SUCCESS;
         if (!(level.getBlockEntity(pos) instanceof FishPlaqueBlockEntity be)) return InteractionResult.PASS;
 
         if (be.hasFish()) {
             ItemStack bucket = buildReturnBucket(be);
             if (!player.getInventory().add(bucket)) {
-                player.drop(bucket, false);
+                player.drop(bucket, false, Prediction.SERVER_ONLY);
             }
 
             be.clearFish();
             sync(be, level, pos, state);
             level.playSound(null, pos, SoundEvents.ITEM_FRAME_REMOVE_ITEM, SoundSource.BLOCKS, 1.0f, 1.0f);
-
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;
@@ -185,17 +162,18 @@ public class FishPlaqueBlock extends BaseEntityBlock {
     }
 
     @Override
-    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+    protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
         Direction facing = state.getValue(FACING);
         BlockPos supportPos = pos.relative(facing.getOpposite());
         return level.getBlockState(supportPos).isFaceSturdy(level, supportPos, facing);
     }
 
     @Override
-    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
+    protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction,
+                                     BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
         if (direction == state.getValue(FACING).getOpposite() && !state.canSurvive(level, pos)) {
             return Blocks.AIR.defaultBlockState();
         }
-        return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
+        return super.updateShape(state, level, ticks, pos, direction, neighbourPos, neighbourState, random);
     }
 }

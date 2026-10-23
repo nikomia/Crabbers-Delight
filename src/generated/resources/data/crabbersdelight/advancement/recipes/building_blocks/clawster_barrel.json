@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:clawster_barrel"
+        "recipes": "crabbersdelight:clawster_barrel"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

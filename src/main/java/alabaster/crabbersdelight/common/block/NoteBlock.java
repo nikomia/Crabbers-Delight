@@ -2,41 +2,34 @@ package alabaster.crabbersdelight.common.block;
 
 import alabaster.crabbersdelight.client.gui.NoteClientHandler;
 import alabaster.crabbersdelight.common.block.entity.NoteBlockEntity;
-import alabaster.crabbersdelight.common.item.component.NoteContent;
-import alabaster.crabbersdelight.common.item.component.SignedNoteContent;
-import alabaster.crabbersdelight.common.registry.CDModDataComponents;
-import alabaster.crabbersdelight.common.registry.CDModItems;
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class NoteBlock extends BaseEntityBlock {
 
-    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty SIGNED = BooleanProperty.create("signed");
     public static final BooleanProperty FLAT = BooleanProperty.create("flat");
 
@@ -53,11 +46,6 @@ public class NoteBlock extends BaseEntityBlock {
                 .setValue(FACING, Direction.NORTH)
                 .setValue(SIGNED, false)
                 .setValue(FLAT, false));
-    }
-
-    @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return null;
     }
 
     @Override
@@ -83,11 +71,6 @@ public class NoteBlock extends BaseEntityBlock {
     }
 
     @Override
-    public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
-    }
-
-    @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new NoteBlockEntity(pos, state);
     }
@@ -101,7 +84,7 @@ public class NoteBlock extends BaseEntityBlock {
     }
 
     @Override
-    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+    protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
         if (state.getValue(FLAT)) {
             BlockPos below = pos.below();
             return level.getBlockState(below).isCollisionShapeFullBlock(level, below);
@@ -112,7 +95,8 @@ public class NoteBlock extends BaseEntityBlock {
     }
 
     @Override
-    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
+    protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction,
+                                     BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
         if (state.getValue(FLAT)) {
             if (direction == Direction.DOWN && !state.canSurvive(level, pos)) {
                 return Blocks.AIR.defaultBlockState();
@@ -120,7 +104,7 @@ public class NoteBlock extends BaseEntityBlock {
         } else if (direction == state.getValue(FACING).getOpposite() && !state.canSurvive(level, pos)) {
             return Blocks.AIR.defaultBlockState();
         }
-        return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
+        return super.updateShape(state, level, ticks, pos, direction, neighbourPos, neighbourState, random);
     }
 
     @Override
@@ -128,39 +112,9 @@ public class NoteBlock extends BaseEntityBlock {
         if (!(level.getBlockEntity(pos) instanceof NoteBlockEntity note)) {
             return InteractionResult.PASS;
         }
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             NoteClientHandler.openBlockScreen(pos, note.isSigned(), note.getTitle(), note.getText(), note.getAuthor());
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
-    }
-
-    @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!state.is(newState.getBlock()) && !level.isClientSide
-                && level.getBlockEntity(pos) instanceof NoteBlockEntity note) {
-            ItemStack drop = note.isSigned() ? signedNoteStack(note) : unsignedNoteStack(note);
-            if (drop != null) {
-                double x = pos.getX() + 0.5;
-                double y = pos.getY() + 0.5;
-                double z = pos.getZ() + 0.5;
-                level.addFreshEntity(new ItemEntity(level, x, y, z, drop));
-            }
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
-    }
-
-    private ItemStack unsignedNoteStack(NoteBlockEntity note) {
-        if (note.getText().isEmpty()) {
-            return null;
-        }
-        ItemStack stack = new ItemStack(CDModItems.NOTE.get());
-        stack.set(CDModDataComponents.NOTE_CONTENT.get(), new NoteContent(note.getText()));
-        return stack;
-    }
-
-    private ItemStack signedNoteStack(NoteBlockEntity note) {
-        ItemStack stack = new ItemStack(CDModItems.SIGNED_NOTE.get());
-        stack.set(CDModDataComponents.SIGNED_NOTE_CONTENT.get(), new SignedNoteContent(note.getTitle(), note.getText(), note.getAuthor(), note.getGeneration()));
-        return stack;
+        return InteractionResult.SUCCESS;
     }
 }

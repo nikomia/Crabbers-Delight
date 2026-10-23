@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:cooked_glow_squid_tentacles_from_campfire_cooking"
+        "recipes": "crabbersdelight:cooked_glow_squid_tentacles_from_campfire_cooking"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "crabbersdelight:pearl_block"
-    }
+    "crabbersdelight:pearl_block"
   ],
   "result": {
     "count": 9,

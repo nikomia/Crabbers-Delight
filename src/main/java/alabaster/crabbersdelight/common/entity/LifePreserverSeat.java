@@ -1,14 +1,20 @@
 package alabaster.crabbersdelight.common.entity;
 
 import alabaster.crabbersdelight.common.registry.CDModEntities;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Invisible mount used to sit on a floor life preserver.
+ */
 public class LifePreserverSeat extends Entity {
     private static final double PASSENGER_HEIGHT = 0.25;
 
@@ -24,8 +30,21 @@ public class LifePreserverSeat extends Entity {
     }
 
     @Override
-    protected Vec3 getPassengerAttachmentPoint(Entity entity, EntityDimensions dimensions, float partialTick) {
+    public void tick() {
+        super.tick();
+        if (!this.level().isClientSide() && this.getPassengers().isEmpty()) {
+            this.discard();
+        }
+    }
+
+    @Override
+    protected Vec3 getPassengerAttachmentPoint(Entity passenger, EntityDimensions dimensions, float scale) {
         return new Vec3(0, PASSENGER_HEIGHT, 0);
+    }
+
+    @Override
+    public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+        return false;
     }
 
     @Override
@@ -33,10 +52,10 @@ public class LifePreserverSeat extends Entity {
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag compoundTag) {
+    protected void readAdditionalSaveData(ValueInput input) {
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag compoundTag) {
+    protected void addAdditionalSaveData(ValueOutput output) {
     }
 }

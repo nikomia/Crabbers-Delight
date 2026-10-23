@@ -3,7 +3,6 @@ package alabaster.crabbersdelight.common.item;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,21 +26,16 @@ public class WormItem extends Item {
             return InteractionResult.PASS;
         }
 
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             int stage = state.getValue(OrganicCompostBlock.COMPOSTING);
-            int maxStage = compostBlock.getMaxCompostingStage();
-
-            BlockState advanced = stage >= maxStage
+            BlockState advanced = stage >= compostBlock.getMaxCompostingStage()
                     ? ModBlocks.RICH_SOIL.get().defaultBlockState()
                     : state.setValue(OrganicCompostBlock.COMPOSTING, stage + 1);
 
             level.setBlockAndUpdate(pos, advanced);
             level.levelEvent(BONEMEAL_USE_EVENT, pos, 0);
-
-            ItemStack heldWorm = context.getItemInHand();
-            heldWorm.shrink(1);
+            context.getItemInHand().shrink(1);
         }
-
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.SUCCESS;
     }
 }

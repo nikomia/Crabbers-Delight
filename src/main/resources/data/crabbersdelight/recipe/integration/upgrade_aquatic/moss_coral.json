@@ -8,12 +8,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "c": {
-      "item": "crabbersdelight:coral_fragments"
-    },
-    "d": {
-      "item": "minecraft:green_dye"
-    }
+    "c": "crabbersdelight:coral_fragments",
+    "d": "minecraft:green_dye"
   },
   "pattern": [
     "   ",
@@ -21,7 +17,6 @@
     "   "
   ],
   "result": {
-    "count": 1,
     "id": "upgrade_aquatic:moss_coral"
   }
 }

@@ -2,25 +2,23 @@ package alabaster.crabbersdelight.common.worldgen.tree;
 
 import alabaster.crabbersdelight.common.block.CDLeavesBlock;
 import alabaster.crabbersdelight.common.block.CoconutBlock;
-import alabaster.crabbersdelight.common.registry.CDFoliagePlacerTypes;
 import alabaster.crabbersdelight.common.registry.CDModBlocks;
+import alabaster.crabbersdelight.common.registry.CDModFeatures;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.IntProvider;
-import net.minecraft.world.level.LevelSimulatedReader;
-import net.minecraft.world.level.block.LeavesBlock;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.feature.TreeFeature;
 import net.minecraft.world.level.levelgen.feature.foliageplacers.FoliagePlacer;
 import net.minecraft.world.level.levelgen.feature.foliageplacers.FoliagePlacerType;
 
 public class PalmFoliagePlacer extends FoliagePlacer {
     public static final MapCodec<PalmFoliagePlacer> CODEC =
-            RecordCodecBuilder.mapCodec(instance ->
-                    foliagePlacerParts(instance).apply(instance, PalmFoliagePlacer::new));
+            RecordCodecBuilder.mapCodec(instance -> foliagePlacerParts(instance).apply(instance, PalmFoliagePlacer::new));
 
     public PalmFoliagePlacer(IntProvider radius, IntProvider offset) {
         super(radius, offset);
@@ -28,36 +26,36 @@ public class PalmFoliagePlacer extends FoliagePlacer {
 
     @Override
     protected FoliagePlacerType<?> type() {
-        return CDFoliagePlacerTypes.PALM_FOLIAGE_PLACER.get();
+        return CDModFeatures.PALM_FOLIAGE_PLACER.get();
     }
 
     @Override
-    protected void createFoliage(LevelSimulatedReader level, FoliageSetter setter, RandomSource random, TreeConfiguration config, int maxFreeTreeHeight, FoliageAttachment attachment, int foliageHeight, int foliageRadius, int offset) {
+    protected void createFoliage(WorldGenLevel level, FoliageSetter setter, RandomSource random, TreeFeature tree, int treeHeight,
+                                 FoliageAttachment attachment, int foliageHeight, int leafRadius, int offset) {
         BlockPos center = attachment.pos();
 
-        // --- Tuft cross ABOVE frond level ---
-        BlockPos tuftCenter = attachment.pos().above(0);
-        placeLeafWithCoconut(level, setter, random, config, tuftCenter);
-        placeLeafWithCoconut(level, setter, random, config, tuftCenter.north());
-        placeLeafWithCoconut(level, setter, random, config, tuftCenter.south());
-        placeLeafWithCoconut(level, setter, random, config, tuftCenter.east());
-        placeLeafWithCoconut(level, setter, random, config, tuftCenter.west());
+        // Tuft cross above frond level
+        placeLeafWithCoconut(level, setter, random, tree, center);
+        placeLeafWithCoconut(level, setter, random, tree, center.north());
+        placeLeafWithCoconut(level, setter, random, tree, center.south());
+        placeLeafWithCoconut(level, setter, random, tree, center.east());
+        placeLeafWithCoconut(level, setter, random, tree, center.west());
 
         // Cardinals
-        createFrond(center, level, setter, random, config,  1,  0); // east
-        createFrond(center, level, setter, random, config, -1,  0); // west
-        createFrond(center, level, setter, random, config,  0,  1); // south
-        createFrond(center, level, setter, random, config,  0, -1); // north
+        createFrond(center, level, setter, random, tree, 1, 0);
+        createFrond(center, level, setter, random, tree, -1, 0);
+        createFrond(center, level, setter, random, tree, 0, 1);
+        createFrond(center, level, setter, random, tree, 0, -1);
 
         // Diagonals
-        createFrond(center, level, setter, random, config,  1,  1); // SE
-        createFrond(center, level, setter, random, config,  1, -1); // NE
-        createFrond(center, level, setter, random, config, -1,  1); // SW
-        createFrond(center, level, setter, random, config, -1, -1); // NW
+        createFrond(center, level, setter, random, tree, 1, 1);
+        createFrond(center, level, setter, random, tree, 1, -1);
+        createFrond(center, level, setter, random, tree, -1, 1);
+        createFrond(center, level, setter, random, tree, -1, -1);
     }
 
     @Override
-    public int foliageHeight(RandomSource random, int height, TreeConfiguration config) {
+    public int foliageHeight(RandomSource random, int treeHeight, TreeFeature tree) {
         return 0;
     }
 
@@ -66,33 +64,21 @@ public class PalmFoliagePlacer extends FoliagePlacer {
         return false;
     }
 
-    private static void createFrond(BlockPos start, LevelSimulatedReader level, FoliageSetter setter, RandomSource random, TreeConfiguration config, int dx, int dz) {
-        BlockPos.MutableBlockPos pos = start.mutable();
-
-        // Step 1: initial drop 1 down
-        pos.set(start.getX() + dx, start.getY() - 1, start.getZ() + dz);
-        placeLeafWithCoconut(level, setter, random, config, pos);
-
-        // Step 2: extend horizontally 2 blocks at same level
+    private static void createFrond(BlockPos start, WorldGenLevel level, FoliageSetter setter, RandomSource random, TreeFeature tree, int dx, int dz) {
+        placeLeafWithCoconut(level, setter, random, tree, new BlockPos(start.getX() + dx, start.getY() - 1, start.getZ() + dz));
         for (int i = 2; i <= 3; i++) {
-            pos.set(start.getX() + dx * i, start.getY() - 1, start.getZ() + dz * i);
-            placeLeafWithCoconut(level, setter, random, config, pos);
+            placeLeafWithCoconut(level, setter, random, tree, new BlockPos(start.getX() + dx * i, start.getY() - 1, start.getZ() + dz * i));
         }
-
-        // Step 3: tip leaf 1 lower
-        pos.set(start.getX() + dx * 4, start.getY() - 2, start.getZ() + dz * 4);
-        placeLeafWithCoconut(level, setter, random, config, pos);
+        placeLeafWithCoconut(level, setter, random, tree, new BlockPos(start.getX() + dx * 4, start.getY() - 2, start.getZ() + dz * 4));
     }
 
-    private static void placeLeafWithCoconut(LevelSimulatedReader level, FoliageSetter setter, RandomSource random, TreeConfiguration config, BlockPos pos) {
-        // Place leaf
-        BlockState leaf = config.foliageProvider.getState(random, pos);
+    private static void placeLeafWithCoconut(WorldGenLevel level, FoliageSetter setter, RandomSource random, TreeFeature tree, BlockPos pos) {
+        BlockState leaf = tree.foliageProvider().value().getState(level, random, pos);
         if (leaf.hasProperty(CDLeavesBlock.GENERATED)) {
             leaf = leaf.setValue(CDLeavesBlock.GENERATED, true);
         }
         setter.set(pos, leaf);
 
-        // Chance to place coconut beneath any leaf
         if (random.nextInt(5) == 0) {
             BlockPos below = pos.below();
             if (level.isStateAtPosition(below, BlockBehaviour.BlockStateBase::isAir)) {

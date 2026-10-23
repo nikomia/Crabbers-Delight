@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "crabbersdelight:coconut_crate"
-    }
+    "crabbersdelight:coconut_crate"
   ],
   "result": {
     "count": 9,

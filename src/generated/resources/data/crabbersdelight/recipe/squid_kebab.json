@@ -2,24 +2,13 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "minecraft:stick"
-    },
-    {
-      "tag": "crabbersdelight:cooked_squid"
-    },
-    {
-      "item": "farmersdelight:onion"
-    },
-    {
-      "item": "farmersdelight:onion"
-    },
-    {
-      "item": "farmersdelight:tomato"
-    }
+    "minecraft:stick",
+    "#crabbersdelight:cooked_squid",
+    "farmersdelight:onion",
+    "farmersdelight:onion",
+    "farmersdelight:tomato"
   ],
   "result": {
-    "count": 1,
     "id": "crabbersdelight:squid_kebab"
   }
 }

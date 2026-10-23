@@ -10,18 +10,19 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class TackleBoxItem extends BlockItem {
-    public TackleBoxItem(Item.Properties properties) {
+    public TackleBoxItem(Properties properties) {
         super(CDModBlocks.TACKLE_BOX.get(), properties);
     }
 
@@ -31,12 +32,12 @@ public class TackleBoxItem extends BlockItem {
         BlockPlaceContext placeContext = new BlockPlaceContext(context);
         InteractionResult result = place(placeContext);
         Level level = context.getLevel();
-        if (result.consumesAction() && !level.isClientSide) {
+        if (result.consumesAction() && !level.isClientSide() && contents != null) {
             BlockPos placedPos = placeContext.getClickedPos();
-            if (contents != null && level.getBlockEntity(placedPos) instanceof TackleBoxBlockEntity tackleBox) {
+            if (level.getBlockEntity(placedPos) instanceof TackleBoxBlockEntity tackleBox) {
                 List<ItemStack> items = contents.items();
-                for (int i = 0; i < tackleBox.handler.getSlots() && i < items.size(); i++) {
-                    tackleBox.handler.setStackInSlot(i, items.get(i));
+                for (int i = 0; i < tackleBox.handler.getSlotCount() && i < items.size(); i++) {
+                    tackleBox.handler.setStackInSlot(i, items.get(i).copy());
                 }
                 tackleBox.setChanged();
             }
@@ -45,7 +46,7 @@ public class TackleBoxItem extends BlockItem {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
         TackleBoxContents contents = stack.get(CDModDataComponents.TACKLE_BOX_CONTENTS.get());
         if (contents == null) {
             return;
@@ -54,20 +55,7 @@ public class TackleBoxItem extends BlockItem {
 
         addSlotLine(tooltip, items, TackleBoxItemHandler.LURE_SLOT, "item.crabbersdelight.tackle_box.lure");
         addSlotLine(tooltip, items, TackleBoxItemHandler.LINE_SLOT, "item.crabbersdelight.tackle_box.line");
-        addBaitLine(tooltip, items);
-    }
 
-    private static void addSlotLine(List<Component> tooltip, List<ItemStack> items, int slot, String translationKey) {
-        if (slot >= items.size()) {
-            return;
-        }
-        ItemStack item = items.get(slot);
-        if (!item.isEmpty()) {
-            tooltip.add(Component.translatable(translationKey, item.getHoverName()).withStyle(ChatFormatting.GRAY));
-        }
-    }
-
-    private static void addBaitLine(List<Component> tooltip, List<ItemStack> items) {
         List<String> baitNames = new ArrayList<>();
         for (int slot : new int[]{TackleBoxItemHandler.BAIT_SLOT_1, TackleBoxItemHandler.BAIT_SLOT_2}) {
             if (slot < items.size() && !items.get(slot).isEmpty()) {
@@ -75,8 +63,14 @@ public class TackleBoxItem extends BlockItem {
             }
         }
         if (!baitNames.isEmpty()) {
-            tooltip.add(Component.translatable("item.crabbersdelight.tackle_box.bait", String.join(", ", baitNames))
+            tooltip.accept(Component.translatable("item.crabbersdelight.tackle_box.bait", String.join(", ", baitNames))
                     .withStyle(ChatFormatting.GRAY));
+        }
+    }
+
+    private static void addSlotLine(Consumer<Component> tooltip, List<ItemStack> items, int slot, String translationKey) {
+        if (slot < items.size() && !items.get(slot).isEmpty()) {
+            tooltip.accept(Component.translatable(translationKey, items.get(slot).getHoverName()).withStyle(ChatFormatting.GRAY));
         }
     }
 }

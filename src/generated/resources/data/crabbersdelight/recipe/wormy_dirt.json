@@ -2,21 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "crabbersdelight:worm"
-    },
-    {
-      "item": "crabbersdelight:worm"
-    },
-    {
-      "item": "crabbersdelight:worm"
-    },
-    {
-      "item": "minecraft:dirt"
-    }
+    "crabbersdelight:worm",
+    "crabbersdelight:worm",
+    "crabbersdelight:worm",
+    "minecraft:dirt"
   ],
   "result": {
-    "count": 1,
     "id": "crabbersdelight:wormy_dirt"
   }
 }

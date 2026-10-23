@@ -22,7 +22,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:coconut_milk"
+        "recipes": "crabbersdelight:coconut_milk"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

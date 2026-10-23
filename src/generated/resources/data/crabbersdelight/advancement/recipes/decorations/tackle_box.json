@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:tackle_box"
+        "recipes": "crabbersdelight:tackle_box"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

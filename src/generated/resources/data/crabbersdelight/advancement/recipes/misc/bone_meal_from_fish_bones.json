@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:bone_meal_from_fish_bones"
+        "recipes": "crabbersdelight:bone_meal_from_fish_bones"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

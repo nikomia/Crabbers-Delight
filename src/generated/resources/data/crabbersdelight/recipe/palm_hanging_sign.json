@@ -3,12 +3,8 @@
   "category": "misc",
   "group": "hanging_sign",
   "key": {
-    "#": {
-      "item": "minecraft:chain"
-    },
-    "W": {
-      "item": "crabbersdelight:stripped_palm_log"
-    }
+    "#": "minecraft:iron_chain",
+    "W": "crabbersdelight:stripped_palm_log"
   },
   "pattern": [
     "# #",

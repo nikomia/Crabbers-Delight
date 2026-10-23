@@ -8,7 +8,7 @@ import alabaster.crabbersdelight.common.utils.FishingGearUtil;
 import alabaster.crabbersdelight.common.utils.FishingHookReflection;
 import alabaster.crabbersdelight.common.utils.TackleBoxProximity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -43,11 +43,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@EventBusSubscriber(modid = CrabbersDelight.MODID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = CrabbersDelight.MODID)
 public class FishingLureEvents {
-    private static final ResourceLocation SHINY_LUCK_ID = CrabbersDelight.modPrefix("magnetic_lure_luck");
+    private static final Identifier SHINY_LUCK_ID = CrabbersDelight.modPrefix("magnetic_lure_luck");
     private static final double SHINY_LUCK_BONUS = 2.0;
-    private static final ResourceLocation STORM_LUCK_ID = CrabbersDelight.modPrefix("storm_lure_luck");
+    private static final Identifier STORM_LUCK_ID = CrabbersDelight.modPrefix("storm_lure_luck");
     private static final double STORM_LUCK_BONUS_RAIN = 3.0;
     private static final double STORM_LUCK_BONUS_THUNDER = 6.0;
     private static final int BARBED_MIN_NIBBLE_TICKS = 60;
@@ -75,7 +75,7 @@ public class FishingLureEvents {
         if (lure.isEmpty()) {
             return;
         }
-        lure.hurtAndBreak(amount, player, LivingEntity.getSlotForHand(InteractionHand.MAIN_HAND));
+        lure.hurtAndBreak(amount, player, InteractionHand.MAIN_HAND);
         tackleBox.setSlot(TackleBoxItemHandler.LURE_SLOT, lure);
     }
 
@@ -146,7 +146,7 @@ public class FishingLureEvents {
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         Player player = event.getEntity();
-        if (player.level().isClientSide) {
+        if (player.level().isClientSide()) {
             return;
         }
 
@@ -182,7 +182,7 @@ public class FishingLureEvents {
         ItemStack rodStack = player.getItemInHand(rodHand);
         int damage = hook.retrieve(rodStack);
         ItemStack original = rodStack.copy();
-        rodStack.hurtAndBreak(damage, player, LivingEntity.getSlotForHand(rodHand));
+        rodStack.hurtAndBreak(damage, player, rodHand);
         if (rodStack.isEmpty()) {
             EventHooks.onPlayerDestroyItem(player, original, rodHand);
         }

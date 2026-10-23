@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:palm_door"
+        "recipes": "crabbersdelight:palm_door"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

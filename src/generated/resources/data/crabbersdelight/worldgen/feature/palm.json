@@ -1,0 +1,41 @@
+{
+  "type": "minecraft:tree",
+  "trunk_provider": {
+    "id": "crabbersdelight:palm_log",
+    "properties": {
+      "axis": "y"
+    }
+  },
+  "trunk_placer": {
+    "type": "crabbersdelight:palm",
+    "base_height": 5,
+    "height_rand_a": 3,
+    "height_rand_b": 3,
+    "bend_length": 3
+  },
+  "foliage_provider": {
+    "id": "crabbersdelight:palm_leaves",
+    "properties": {
+      "distance": "7",
+      "generated": "false",
+      "persistent": "false",
+      "waterlogged": "false"
+    }
+  },
+  "foliage_placer": {
+    "type": "crabbersdelight:palm_foliage_placer",
+    "radius": 2,
+    "offset": 3
+  },
+  "minimum_size": {
+    "type": "minecraft:two_layers_feature_size",
+    "limit": 1,
+    "lower_size": 0,
+    "upper_size": 2
+  },
+  "decorators": [],
+  "ignore_vines": false,
+  "below_trunk_provider": {
+    "id": "minecraft:sand"
+  }
+}

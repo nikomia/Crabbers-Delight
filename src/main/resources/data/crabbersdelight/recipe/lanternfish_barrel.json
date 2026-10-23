@@ -8,9 +8,7 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "#": {
-      "item": "sullysmod:lanternfish"
-    }
+    "#": "sullysmod:lanternfish"
   },
   "pattern": [
     "###",

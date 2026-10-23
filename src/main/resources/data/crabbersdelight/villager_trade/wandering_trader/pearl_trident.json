@@ -1,0 +1,12 @@
+{
+  "gives": {
+    "id": "minecraft:trident"
+  },
+  "max_uses": 1,
+  "reputation_discount": 0.05,
+  "wants": {
+    "id": "crabbersdelight:pearl",
+    "count": 64
+  },
+  "xp": 12
+}

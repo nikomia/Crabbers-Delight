@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:fish_plaque"
+        "recipes": "crabbersdelight:fish_plaque"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

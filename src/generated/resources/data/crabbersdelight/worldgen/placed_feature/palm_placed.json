@@ -24,8 +24,8 @@
       "predicate": {
         "type": "minecraft:would_survive",
         "state": {
-          "Name": "crabbersdelight:palm_sapling",
-          "Properties": {
+          "id": "crabbersdelight:palm_sapling",
+          "properties": {
             "stage": "0"
           }
         }

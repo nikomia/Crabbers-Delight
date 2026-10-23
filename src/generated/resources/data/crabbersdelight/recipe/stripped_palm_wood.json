@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "#": {
-      "item": "crabbersdelight:stripped_palm_log"
-    }
+    "#": "crabbersdelight:stripped_palm_log"
   },
   "pattern": [
     "##",

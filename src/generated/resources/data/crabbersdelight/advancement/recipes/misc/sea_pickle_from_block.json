@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:sea_pickle_from_block"
+        "recipes": "crabbersdelight:sea_pickle_from_block"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

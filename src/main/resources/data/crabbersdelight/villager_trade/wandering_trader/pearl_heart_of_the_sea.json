@@ -1,0 +1,12 @@
+{
+  "gives": {
+    "id": "minecraft:heart_of_the_sea"
+  },
+  "max_uses": 4,
+  "reputation_discount": 0.05,
+  "wants": {
+    "id": "crabbersdelight:pearl",
+    "count": 32
+  },
+  "xp": 12
+}

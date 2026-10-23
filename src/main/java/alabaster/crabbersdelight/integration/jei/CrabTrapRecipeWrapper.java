@@ -1,22 +1,11 @@
 package alabaster.crabbersdelight.integration.jei;
 
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
 
-public class CrabTrapRecipeWrapper {
-    public ItemStack input;
-    public Ingredient output;
+import java.util.List;
 
-    public CrabTrapRecipeWrapper(ItemStack input, Ingredient output) {
-        this.input = input;
-        this.output = output;
-    }
-
-    public ItemStack getInput() {
-        return input;
-    }
-
-    public Ingredient getOutput() {
-        return output;
-    }
+/**
+ * A bait and the catches it can attract in a crab trap.
+ */
+public record CrabTrapRecipeWrapper(ItemStack input, List<ItemStack> outputs) {
 }

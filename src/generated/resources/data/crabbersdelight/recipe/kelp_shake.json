@@ -2,27 +2,14 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "minecraft:glass_bottle"
-    },
-    {
-      "item": "minecraft:sugar"
-    },
-    {
-      "item": "minecraft:kelp"
-    },
-    {
-      "item": "minecraft:kelp"
-    },
-    {
-      "item": "minecraft:kelp"
-    },
-    {
-      "item": "minecraft:kelp"
-    }
+    "minecraft:glass_bottle",
+    "minecraft:sugar",
+    "minecraft:kelp",
+    "minecraft:kelp",
+    "minecraft:kelp",
+    "minecraft:kelp"
   ],
   "result": {
-    "count": 1,
     "id": "crabbersdelight:kelp_shake"
   }
 }

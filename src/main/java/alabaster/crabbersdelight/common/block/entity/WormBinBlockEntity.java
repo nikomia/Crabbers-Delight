@@ -1,39 +1,43 @@
 package alabaster.crabbersdelight.common.block.entity;
 
-import alabaster.crabbersdelight.CrabbersDelight;
 import alabaster.crabbersdelight.common.block.entity.inventory.WormBinItemHandler;
 import alabaster.crabbersdelight.common.registry.CDModBlockEntity;
 import alabaster.crabbersdelight.common.registry.CDModItems;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.Compostable;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.wrapper.RangedWrapper;
-import net.neoforged.neoforge.registries.datamaps.builtin.Compostable;
-import net.neoforged.neoforge.registries.datamaps.builtin.NeoForgeDataMaps;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.Vec3;
 
-@EventBusSubscriber(modid = CrabbersDelight.MODID, bus = EventBusSubscriber.Bus.MOD)
+import java.util.Optional;
+
 public class WormBinBlockEntity extends BlockEntity {
     public static final int DEGRADE_TIME = 1200;
     public static final int MAX_WORMS = 16;
     private static final float PARTICLE_CHANCE = 0.1f;
+    // Each roll adds a worm with the item's composting chance, keeping the old "1 + 2 * chance" average yield
+    private static final int COMPOST_ROLLS = 2;
 
-    private final WormBinItemHandler handler = new WormBinItemHandler();
-    private final IItemHandler fuelInput = new RangedWrapper(handler, WormBinItemHandler.FUEL_SLOT, WormBinItemHandler.FUEL_SLOT + 1);
-    private final IItemHandler wormOutput = new RangedWrapper(handler, WormBinItemHandler.WORM_SLOT, WormBinItemHandler.WORM_SLOT + 1);
+    private final WormBinItemHandler handler = new WormBinItemHandler() {
+        @Override
+        protected void onContentsChanged(int slot) {
+            setChanged();
+        }
+    };
     private int progress = 0;
 
     public WormBinBlockEntity(BlockPos pos, BlockState state) {
@@ -41,8 +45,10 @@ public class WormBinBlockEntity extends BlockEntity {
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, WormBinBlockEntity be) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
         ItemStack fuel = be.handler.getStackInSlot(WormBinItemHandler.FUEL_SLOT);
-        boolean changed = false;
 
         if (fuel.isEmpty()) {
             be.progress = 0;
@@ -51,47 +57,44 @@ public class WormBinBlockEntity extends BlockEntity {
             if (be.progress >= DEGRADE_TIME) {
                 be.progress = 0;
 
-                float chance = getCompostChance(fuel);
-                int yield = 1 + Math.round(chance * 2);
-
+                int yield = 1 + rollCompostLayers(serverLevel, pos, state, fuel);
                 ItemStack currentWorms = be.handler.getStackInSlot(WormBinItemHandler.WORM_SLOT);
                 int newCount = Math.min(MAX_WORMS, currentWorms.getCount() + yield);
                 be.handler.setStackInSlot(WormBinItemHandler.WORM_SLOT, new ItemStack(CDModItems.WORM.get(), newCount));
+                be.handler.setStackInSlot(WormBinItemHandler.FUEL_SLOT, ItemStack.EMPTY);
 
-                fuel.shrink(1);
-                changed = true;
-
-                if (level instanceof ServerLevel serverLevel) {
-                    serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
-                            pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5,
-                            10, 0.25, 0.15, 0.25, 0.0);
-                }
+                serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER,
+                        pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5,
+                        10, 0.25, 0.15, 0.25, 0.0);
             }
         }
 
-        if (!fuel.isEmpty() && level instanceof ServerLevel serverLevel && level.getRandom().nextFloat() < PARTICLE_CHANCE) {
+        if (!be.handler.getStackInSlot(WormBinItemHandler.FUEL_SLOT).isEmpty() && level.getRandom().nextFloat() < PARTICLE_CHANCE) {
             serverLevel.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.PODZOL.defaultBlockState()),
                     pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5,
                     2, 0.2, 0.05, 0.2, 0.0);
         }
+    }
 
-        if (changed) {
-            be.setChanged();
+    private static int rollCompostLayers(ServerLevel level, BlockPos pos, BlockState state, ItemStack fuel) {
+        Compostable compostable = fuel.get(DataComponents.COMPOSTABLE);
+        if (compostable == null) {
+            return 0;
         }
+        LootContext context = new LootContext.Builder(new LootParams.Builder(level)
+                .withParameter(LootContextParams.BLOCK_STATE, state)
+                .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+                .create(LootContextParamSets.BLOCK_INTERACT))
+                .create(Optional.empty());
+        int total = 0;
+        for (int i = 0; i < COMPOST_ROLLS; i++) {
+            total += Math.max(0, compostable.layers().get(context, 0));
+        }
+        return total;
     }
 
     public static boolean isValidFuel(ItemStack stack) {
-        return getCompostChanceOrNegative(stack) >= 0f;
-    }
-
-    private static float getCompostChance(ItemStack stack) {
-        float chance = getCompostChanceOrNegative(stack);
-        return chance >= 0f ? chance : 0f;
-    }
-
-    private static float getCompostChanceOrNegative(ItemStack stack) {
-        Compostable data = stack.getItemHolder().getData(NeoForgeDataMaps.COMPOSTABLES);
-        return data != null ? data.chance() : -1f;
+        return stack.has(DataComponents.COMPOSTABLE);
     }
 
     public boolean insertFuel(ItemStack stack) {
@@ -132,26 +135,30 @@ public class WormBinBlockEntity extends BlockEntity {
         return handler;
     }
 
-    @SubscribeEvent
-    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, CDModBlockEntity.WORM_BIN.get(),
-                (be, context) -> context == Direction.UP ? be.fuelInput : be.wormOutput
-        );
-    }
-
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.put("Inventory", handler.serializeNBT(registries));
-        tag.putInt("Progress", progress);
-    }
-
-    @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        if (tag.contains("Inventory")) {
-            handler.deserializeNBT(registries, tag.getCompound("Inventory"));
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        if (level != null) {
+            for (int slot = 0; slot < handler.getSlotCount(); slot++) {
+                ItemStack stack = handler.getStackInSlot(slot);
+                if (!stack.isEmpty()) {
+                    Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
+                }
+            }
         }
-        progress = tag.getInt("Progress");
+        super.preRemoveSideEffects(pos, state);
+    }
+
+    @Override
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        handler.serialize(output.child("Inventory"));
+        output.putInt("Progress", progress);
+    }
+
+    @Override
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        handler.deserialize(input.childOrEmpty("Inventory"));
+        progress = input.getIntOr("Progress", 0);
     }
 }

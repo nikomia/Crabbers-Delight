@@ -1,0 +1,12 @@
+{
+  "gives": {
+    "id": "crabbersdelight:tackle_box"
+  },
+  "max_uses": 4,
+  "reputation_discount": 0.05,
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 8
+  },
+  "xp": 24
+}

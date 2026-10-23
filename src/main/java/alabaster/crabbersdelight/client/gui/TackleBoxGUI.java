@@ -1,54 +1,47 @@
 package alabaster.crabbersdelight.client.gui;
 
 import alabaster.crabbersdelight.CrabbersDelight;
+import alabaster.crabbersdelight.common.block.container.NotifyingSlot;
 import alabaster.crabbersdelight.common.block.container.TackleBoxMenu;
 import alabaster.crabbersdelight.common.block.entity.inventory.TackleBoxItemHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import org.jspecify.annotations.Nullable;
 
-@OnlyIn(Dist.CLIENT)
 public class TackleBoxGUI extends AbstractContainerScreen<TackleBoxMenu> {
-    private static final ResourceLocation TACKLE_BOX_GUI = CrabbersDelight.modPrefix("textures/gui/tackle_box.png");
+    private static final Identifier TACKLE_BOX_GUI = CrabbersDelight.modPrefix("textures/gui/tackle_box.png");
 
     public TackleBoxGUI(TackleBoxMenu menu, Inventory playerInv, Component title) {
-        super(menu, playerInv, title);
-        this.imageWidth = 176;
-        this.imageHeight = 177;
+        super(menu, playerInv, title, 176, 177);
         this.inventoryLabelY = 74;
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        this.renderTooltip(guiGraphics, mouseX, mouseY);
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        super.extractBackground(graphics, mouseX, mouseY, partialTick);
+        int x = (this.width - this.imageWidth) / 2;
+        int y = (this.height - this.imageHeight) / 2;
+        graphics.blit(RenderPipelines.GUI_TEXTURED, TACKLE_BOX_GUI, x, y, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 256, 256);
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        int i = (this.width - this.imageWidth) / 2;
-        int j = (this.height - this.imageHeight) / 2;
-        guiGraphics.blit(TACKLE_BOX_GUI, i, j, 0, 0, this.imageWidth, this.imageHeight);
-    }
+    protected void extractTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        super.extractTooltip(graphics, mouseX, mouseY);
 
-    @Override
-    protected void renderTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        super.renderTooltip(guiGraphics, mouseX, mouseY);
-
-        if (this.hoveredSlot != null && this.hoveredSlot.getItem().isEmpty()) {
-            Component label = slotLabel(this.hoveredSlot.getSlotIndex());
+        // Explain the special slots while they are empty
+        if (this.hoveredSlot instanceof NotifyingSlot && !this.hoveredSlot.hasItem()) {
+            Component label = slotLabel(this.hoveredSlot.getContainerSlot());
             if (label != null) {
-                guiGraphics.renderTooltip(this.font, label, mouseX, mouseY);
+                graphics.setTooltipForNextFrame(label, mouseX, mouseY);
             }
         }
     }
 
-    private static Component slotLabel(int slotIndex) {
+    private static @Nullable Component slotLabel(int slotIndex) {
         if (slotIndex == TackleBoxItemHandler.LURE_SLOT) {
             return Component.translatable("gui.crabbersdelight.tackle_box.lure_slot");
         }

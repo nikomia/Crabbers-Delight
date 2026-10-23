@@ -2,7 +2,6 @@ package alabaster.crabbersdelight.common.block;
 
 import alabaster.crabbersdelight.common.registry.CDDamageSources;
 import alabaster.crabbersdelight.common.registry.CDModItems;
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -21,7 +20,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -33,9 +33,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class CoconutBlock extends FallingBlock {
     public static final BooleanProperty HANGING = BooleanProperty.create("hanging");
-    private static VoxelShape SHAPE = Block.box(3.0D, 0.0D, 3.0D, 13.0D, 10.0D, 13.0D);
-
-    public static final MapCodec<CoconutBlock> CODEC = simpleCodec(CoconutBlock::new);
+    private static final VoxelShape SHAPE = Block.box(3.0D, 0.0D, 3.0D, 13.0D, 10.0D, 13.0D);
+    private static final VoxelShape HANGING_SHAPE = Block.box(3.0D, 5.0D, 3.0D, 13.0D, 15.0D, 13.0D);
 
     public CoconutBlock(Properties properties) {
         super(properties);
@@ -43,8 +42,8 @@ public class CoconutBlock extends FallingBlock {
     }
 
     @Override
-    protected MapCodec<? extends FallingBlock> codec() {
-        return CODEC;
+    public int getDustColor(BlockState blockState, BlockGetter level, BlockPos pos) {
+        return 0x5C3A1E;
     }
 
     @Override
@@ -54,83 +53,68 @@ public class CoconutBlock extends FallingBlock {
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        if (state.getValue(HANGING)) {
-            return Block.box(3.0D, 5.0D, 3.0D, 13.0D, 15.0D, 13.0D);
-        } else {
-            return Block.box(3.0D, 0.0D, 3.0D, 13.0D, 10.0D, 13.0D);
-        }
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return state.getValue(HANGING) ? HANGING_SHAPE : SHAPE;
     }
 
     @Override
-    public BlockState updateShape(BlockState state, Direction facing, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
-        if (facing == Direction.UP || facing == Direction.DOWN) {
+    protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction,
+                                     BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
+        if (direction == Direction.UP || direction == Direction.DOWN) {
             boolean hanging = computeHanging(level, pos);
             if (!hanging) {
-                level.scheduleTick(pos, this, 1);
+                ticks.scheduleTick(pos, this, 1);
             }
             return state.setValue(HANGING, hanging);
         }
-        return super.updateShape(state, facing, neighborState, level, pos, neighborPos);
+        return super.updateShape(state, level, ticks, pos, direction, neighbourPos, neighbourState, random);
     }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        Level level = context.getLevel();
-        BlockPos pos = context.getClickedPos();
-        return this.defaultBlockState().setValue(HANGING, computeHanging(level, pos));
+        return this.defaultBlockState().setValue(HANGING, computeHanging(context.getLevel(), context.getClickedPos()));
     }
 
     private boolean computeHanging(BlockGetter level, BlockPos pos) {
-        BlockState aboveState = level.getBlockState(pos.above());
-        boolean hasSupportAbove = !aboveState.isAir();
-        if (!hasSupportAbove) {
+        if (level.getBlockState(pos.above()).isAir()) {
             return false;
         }
         BlockPos belowPos = pos.below();
-        BlockState belowState = level.getBlockState(belowPos);
-        boolean hasSolidBelow = belowState.isFaceSturdy(level, belowPos, Direction.UP);
-        return !hasSolidBelow;
+        return !level.getBlockState(belowPos).isFaceSturdy(level, belowPos, Direction.UP);
     }
 
     @Override
-    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        boolean hanging = state.getValue(HANGING);
-        if (!hanging) {
+    protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (!state.getValue(HANGING)) {
             super.tick(state, level, pos, random);
         }
     }
 
     @Override
-    public void animateTick(BlockState state, Level level, BlockPos pos, net.minecraft.util.RandomSource random) {
-        // Do nothing
+    public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
+        // No falling dust particles
     }
 
     @Override
     public void onLand(Level level, BlockPos pos, BlockState state, BlockState replaceState, FallingBlockEntity fallingEntity) {
         super.onLand(level, pos, state, replaceState, fallingEntity);
 
-        if (!level.isClientSide && fallingEntity != null) {
+        if (level instanceof ServerLevel serverLevel && fallingEntity != null) {
             boolean hitPlayer = false;
 
             for (Entity entity : level.getEntities(null, SHAPE.bounds().move(pos))) {
                 if (entity instanceof LivingEntity living) {
-
-                    living.hurt(CDDamageSources.getSimpleDamageSource(level, CDDamageSources.FALLING_COCONUT), 2.0F);
+                    living.hurtServer(serverLevel, CDDamageSources.getSimpleDamageSource(level, CDDamageSources.FALLING_COCONUT), 2.0F);
 
                     if (entity instanceof Player player) {
-                        level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.GOAT_HORN_BREAK, SoundSource.PLAYERS, 0.7F, 0.5F
-                        );
+                        level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.GOAT_HORN_BREAK, SoundSource.PLAYERS, 0.7F, 0.5F);
 
-                        player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 200, 0));
-                        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 2));
+                        player.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 200, 0));
+                        player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 200, 2));
 
-                        ItemStack headSlot = player.getItemBySlot(EquipmentSlot.HEAD);
-                        if (headSlot.isEmpty()) {
-                            ItemStack coconutHelmet = new ItemStack(CDModItems.COCONUT_HELMET.get());
-                            player.setItemSlot(EquipmentSlot.HEAD, coconutHelmet);
-
-                            level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ARMOR_EQUIP_LEATHER, SoundSource.PLAYERS, 1.0F, 1.0F);
+                        if (player.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
+                            player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(CDModItems.COCONUT_HELMET.get()));
+                            level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ARMOR_EQUIP_LEATHER.value(), SoundSource.PLAYERS, 1.0F, 1.0F);
                             level.destroyBlock(pos, false);
                         }
 
@@ -146,16 +130,13 @@ public class CoconutBlock extends FallingBlock {
     }
 
     @Override
-    public void onProjectileHit(Level level, BlockState state, BlockHitResult hit, Projectile projectile) {
+    protected void onProjectileHit(Level level, BlockState state, BlockHitResult hit, Projectile projectile) {
         super.onProjectileHit(level, state, hit, projectile);
 
-        if (!level.isClientSide) {
+        if (!level.isClientSide() && state.getValue(HANGING)) {
             BlockPos pos = hit.getBlockPos();
-
-            if (state.getValue(HANGING)) {
-                level.setBlock(pos, state.setValue(HANGING, false), Block.UPDATE_ALL);
-                level.scheduleTick(pos, this, 1);
-            }
+            level.setBlock(pos, state.setValue(HANGING, false), Block.UPDATE_ALL);
+            level.scheduleTick(pos, this, 1);
         }
     }
 }

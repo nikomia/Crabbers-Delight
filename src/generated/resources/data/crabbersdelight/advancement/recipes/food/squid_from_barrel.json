@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:squid_from_barrel"
+        "recipes": "crabbersdelight:squid_from_barrel"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

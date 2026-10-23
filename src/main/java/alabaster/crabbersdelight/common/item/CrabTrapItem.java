@@ -10,17 +10,18 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class CrabTrapItem extends BlockItem {
-    public CrabTrapItem(Item.Properties properties) {
+    public CrabTrapItem(Properties properties) {
         super(CDModBlocks.CRAB_TRAP.get(), properties);
     }
 
@@ -30,13 +31,13 @@ public class CrabTrapItem extends BlockItem {
         BlockPlaceContext placeContext = new BlockPlaceContext(context);
         InteractionResult result = place(placeContext);
         Level level = context.getLevel();
-        if (result.consumesAction() && !level.isClientSide) {
+        if (result.consumesAction() && !level.isClientSide() && contents != null) {
             BlockPos placedPos = placeContext.getClickedPos();
-            if (contents != null && level.getBlockEntity(placedPos) instanceof CrabTrapBlockEntity crabTrap) {
+            if (level.getBlockEntity(placedPos) instanceof CrabTrapBlockEntity crabTrap) {
                 CrabTrapItemHandler handler = crabTrap.getInventory();
                 List<ItemStack> items = contents.items();
-                for (int i = 0; i < handler.getSlots() && i < items.size(); i++) {
-                    handler.setStackInSlot(i, items.get(i));
+                for (int i = 0; i < handler.getSlotCount() && i < items.size(); i++) {
+                    handler.setStackInSlot(i, items.get(i).copy());
                 }
                 crabTrap.setChanged();
             }
@@ -45,7 +46,7 @@ public class CrabTrapItem extends BlockItem {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
         CrabTrapContents contents = stack.get(CDModDataComponents.CRAB_TRAP_CONTENTS.get());
         if (contents == null) {
             return;
@@ -53,17 +54,15 @@ public class CrabTrapItem extends BlockItem {
         List<ItemStack> items = contents.items();
 
         if (!items.isEmpty() && !items.get(0).isEmpty()) {
-            tooltip.add(Component.translatable("item.crabbersdelight.crab_trap.bait", items.get(0).getHoverName())
+            tooltip.accept(Component.translatable("item.crabbersdelight.crab_trap.bait", items.get(0).getHoverName())
                     .withStyle(ChatFormatting.GRAY));
         }
 
         for (int i = 1; i < items.size(); i++) {
             ItemStack item = items.get(i);
-            if (item.isEmpty()) {
-                continue;
+            if (!item.isEmpty()) {
+                tooltip.accept(Component.literal(item.getCount() + "x ").append(item.getHoverName()).withStyle(ChatFormatting.GRAY));
             }
-            tooltip.add(Component.literal(item.getCount() + "x ").append(item.getHoverName())
-                    .withStyle(ChatFormatting.GRAY));
         }
     }
 }

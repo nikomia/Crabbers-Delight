@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:cooking/crab_cakes"
+        "recipes": "crabbersdelight:cooking/crab_cakes"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -4,14 +4,15 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 public class ConchItem extends Item {
     private static final int COOLDOWN_TICKS = 100;
@@ -21,24 +22,23 @@ public class ConchItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (player.getCooldowns().isOnCooldown(this)) {
-            return InteractionResultHolder.pass(stack);
+        if (player.getCooldowns().isOnCooldown(stack)) {
+            return InteractionResult.PASS;
         }
 
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             LuckTier tier = LuckTier.fromLuck(player.getLuck());
-            player.displayClientMessage(tier.randomMessage(player.getRandom()), true);
-            player.getCooldowns().addCooldown(this, COOLDOWN_TICKS);
+            player.sendOverlayMessage(tier.randomMessage(player.getRandom()));
+            player.getCooldowns().addCooldown(stack, COOLDOWN_TICKS);
         }
-
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("tooltip.crabbersdelight.conch.desc").withStyle(ChatFormatting.GRAY));
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
+        tooltip.accept(Component.translatable("tooltip.crabbersdelight.conch.desc").withStyle(ChatFormatting.GRAY));
     }
 
     private enum LuckTier {

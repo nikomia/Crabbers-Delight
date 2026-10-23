@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:cooking/seafood_gumbo"
+        "recipes": "crabbersdelight:cooking/seafood_gumbo"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

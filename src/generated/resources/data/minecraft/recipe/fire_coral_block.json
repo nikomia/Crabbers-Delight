@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "c": {
-      "item": "crabbersdelight:coral_fragments"
-    },
-    "d": {
-      "item": "minecraft:red_dye"
-    }
+    "c": "crabbersdelight:coral_fragments",
+    "d": "minecraft:red_dye"
   },
   "pattern": [
     " c ",
@@ -15,7 +11,6 @@
     " c "
   ],
   "result": {
-    "count": 1,
     "id": "minecraft:fire_coral_block"
   }
 }

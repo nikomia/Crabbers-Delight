@@ -1,29 +1,22 @@
 package alabaster.crabbersdelight.client.gui;
 
-import alabaster.crabbersdelight.CrabbersDelight;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
 
 public class NoteReadScreen extends Screen {
-    private static final ResourceLocation BOOK_BACKGROUND = CrabbersDelight.modPrefix("textures/gui/note.png");
-    private static final int IMAGE_WIDTH = 192;
-    private static final int IMAGE_HEIGHT = 192;
-    private static final int IMAGE_TOP = 2;
-    private static final int TEXT_WIDTH = 114;
     private static final int LINE_HEIGHT = 9;
-    private static final int TEXT_COLOR = 0x000000;
 
     private final String title;
     private final String text;
     private final String author;
     private final boolean showMetadata;
-    private List<FormattedCharSequence> wrappedLines;
+    private List<FormattedCharSequence> wrappedLines = List.of();
     private int imageLeft;
 
     public NoteReadScreen(String title, String text, String author, boolean showMetadata) {
@@ -36,10 +29,10 @@ public class NoteReadScreen extends Screen {
 
     @Override
     protected void init() {
-        imageLeft = (width - IMAGE_WIDTH) / 2;
-        wrappedLines = font.split(Component.literal(text), TEXT_WIDTH);
+        imageLeft = (width - AbstractNoteEditScreen.IMAGE_WIDTH) / 2;
+        wrappedLines = font.split(Component.literal(text), AbstractNoteEditScreen.TEXT_WIDTH);
 
-        int buttonY = IMAGE_TOP + IMAGE_HEIGHT + 2;
+        int buttonY = AbstractNoteEditScreen.IMAGE_TOP + AbstractNoteEditScreen.IMAGE_HEIGHT + 2;
         addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> onClose())
                 .bounds(width / 2 - 100, buttonY, 200, 20).build());
     }
@@ -50,31 +43,31 @@ public class NoteReadScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderTransparentBackground(graphics);
-        graphics.blit(BOOK_BACKGROUND, imageLeft, IMAGE_TOP, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        extractTransparentBackground(graphics);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, AbstractNoteEditScreen.BOOK_BACKGROUND, imageLeft, AbstractNoteEditScreen.IMAGE_TOP,
+                0.0F, 0.0F, AbstractNoteEditScreen.IMAGE_WIDTH, AbstractNoteEditScreen.IMAGE_HEIGHT, 256, 256);
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        super.render(graphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
+        int textWidth = AbstractNoteEditScreen.TEXT_WIDTH;
         int left = imageLeft + 36;
-        int top = IMAGE_TOP + 30;
-        boolean hasTitle = showMetadata && title != null && !title.isBlank();
-        boolean hasAuthor = showMetadata && author != null && !author.isBlank();
+        int top = AbstractNoteEditScreen.IMAGE_TOP + 30;
 
-        if (hasTitle) {
+        if (showMetadata && title != null && !title.isBlank()) {
             Component titleComponent = Component.literal(title);
-            graphics.drawString(font, titleComponent, left + (TEXT_WIDTH - font.width(titleComponent)) / 2, 18, TEXT_COLOR, false);
+            graphics.text(font, titleComponent, left + (textWidth - font.width(titleComponent)) / 2, 18, NotePageWidget.TEXT_COLOR, false);
         }
 
         for (int i = 0; i < wrappedLines.size(); i++) {
-            graphics.drawString(font, wrappedLines.get(i), left, top + i * LINE_HEIGHT, TEXT_COLOR, false);
+            graphics.text(font, wrappedLines.get(i), left, top + i * LINE_HEIGHT, NotePageWidget.TEXT_COLOR, false);
         }
 
-        if (hasAuthor) {
-            graphics.drawString(font, "- " + author, left, top + wrappedLines.size() * LINE_HEIGHT + 6, TEXT_COLOR, false);
+        if (showMetadata && author != null && !author.isBlank()) {
+            graphics.text(font, "- " + author, left, top + wrappedLines.size() * LINE_HEIGHT + 6, NotePageWidget.TEXT_COLOR, false);
         }
     }
 }

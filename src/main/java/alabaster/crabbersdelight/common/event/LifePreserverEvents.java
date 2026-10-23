@@ -16,7 +16,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
-@EventBusSubscriber(modid = CrabbersDelight.MODID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = CrabbersDelight.MODID)
 public class LifePreserverEvents {
     private static final int MAX_SURFACE_SEARCH = 8;
     private static final double DEADZONE = 0.05;

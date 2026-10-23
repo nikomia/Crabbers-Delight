@@ -2,15 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "n": {
-      "item": "farmersdelight:safety_net"
-    },
-    "s": {
-      "item": "minecraft:stick"
-    },
-    "w": {
-      "tag": "minecraft:wooden_slabs"
-    }
+    "n": "farmersdelight:safety_net",
+    "s": "minecraft:stick",
+    "w": "#minecraft:wooden_slabs"
   },
   "pattern": [
     "nsn",
@@ -18,7 +12,6 @@
     "www"
   ],
   "result": {
-    "count": 1,
     "id": "crabbersdelight:crab_trap"
   }
 }

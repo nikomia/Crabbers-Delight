@@ -1,38 +1,24 @@
 {
   "type": "farmersdelight:cooking",
   "container": {
-    "count": 1,
     "id": "minecraft:bowl"
   },
   "experience": 1.0,
   "ingredients": [
     {
-      "type": "neoforge:compound",
+      "neoforge:ingredient_type": "neoforge:compound",
       "children": [
-        {
-          "tag": "crabbersdelight:cooked_seafood"
-        },
-        {
-          "tag": "crabbersdelight:raw_seafood"
-        }
+        "#crabbersdelight:cooked_seafood",
+        "#crabbersdelight:raw_seafood"
       ]
     },
-    {
-      "item": "farmersdelight:onion"
-    },
-    {
-      "item": "farmersdelight:rice"
-    },
-    {
-      "item": "minecraft:carrot"
-    },
-    {
-      "tag": "c:drinks/milk"
-    }
+    "farmersdelight:onion",
+    "farmersdelight:rice",
+    "minecraft:carrot",
+    "#c:drinks/milk"
   ],
   "recipe_book_tab": "meals",
   "result": {
-    "count": 1,
     "id": "crabbersdelight:bisque"
   }
 }

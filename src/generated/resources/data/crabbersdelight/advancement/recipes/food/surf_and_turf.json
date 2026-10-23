@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:surf_and_turf"
+        "recipes": "crabbersdelight:surf_and_turf"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

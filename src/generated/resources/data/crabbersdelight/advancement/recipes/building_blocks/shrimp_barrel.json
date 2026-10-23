@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:shrimp_barrel"
+        "recipes": "crabbersdelight:shrimp_barrel"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

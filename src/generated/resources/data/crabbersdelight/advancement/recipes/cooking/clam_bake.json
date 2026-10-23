@@ -17,7 +17,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:cooking/clam_bake"
+        "recipes": "crabbersdelight:cooking/clam_bake"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

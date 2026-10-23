@@ -1,11 +1,10 @@
 package alabaster.crabbersdelight.common.mixin;
 
 import alabaster.crabbersdelight.common.Config;
+import alabaster.crabbersdelight.common.utils.CuttingBoardSizeContext;
 import alabaster.crabbersdelight.common.item.component.FishSize;
-import alabaster.crabbersdelight.common.registry.CDModDataComponents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,21 +13,20 @@ import vectorwing.farmersdelight.common.crafting.CuttingBoardRecipe;
 
 import java.util.List;
 
-@Mixin(CuttingBoardRecipe.class)
+/**
+ * Bigger fish yield more slices on the cutting board.
+ */
+@Mixin(value = CuttingBoardRecipe.class, remap = false)
 public abstract class CuttingBoardRecipeMixin {
 
     @Inject(method = "rollResults", at = @At("RETURN"))
-    private void crabbersdelight$scaleByFishSize(RandomSource random, int fortuneLevel, RecipeWrapper input, CallbackInfoReturnable<List<ItemStack>> cir) {
-        if (!Config.FISH_SIZE_ENABLED.get()) {
-            return;
-        }
-        FishSize size = input.getItem(0).get(CDModDataComponents.FISH_SIZE.get());
-        if (size == null) {
+    private void crabbersdelight$scaleByFishSize(RandomSource random, int fortuneLevel, CallbackInfoReturnable<List<ItemStack>> cir) {
+        FishSize size = CuttingBoardSizeContext.get();
+        if (size == null || !Config.FISH_SIZE_ENABLED.get()) {
             return;
         }
         for (ItemStack stack : cir.getReturnValue()) {
-            int scaledCount = Math.max(1, Math.round(stack.getCount() * size.getMultiplier()));
-            stack.setCount(scaledCount);
+            stack.setCount(Math.max(1, Math.round(stack.getCount() * size.getMultiplier())));
         }
     }
 }

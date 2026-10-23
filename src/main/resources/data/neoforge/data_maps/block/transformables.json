@@ -1,0 +1,36 @@
+{
+  "values": {
+    "crabbersdelight:palm_log": {
+      "transformer": "minecraft:axe",
+      "transform_data": {
+        "block_state_provider": {
+          "type": "minecraft:copy_properties",
+          "source": {
+            "id": "crabbersdelight:stripped_palm_log",
+            "properties": {
+              "axis": "y"
+            }
+          }
+        },
+        "item_damage_per_use": 1,
+        "sound": "minecraft:item.axe.strip"
+      }
+    },
+    "crabbersdelight:palm_wood": {
+      "transformer": "minecraft:axe",
+      "transform_data": {
+        "block_state_provider": {
+          "type": "minecraft:copy_properties",
+          "source": {
+            "id": "crabbersdelight:stripped_palm_wood",
+            "properties": {
+              "axis": "y"
+            }
+          }
+        },
+        "item_damage_per_use": 1,
+        "sound": "minecraft:item.axe.strip"
+      }
+    }
+  }
+}

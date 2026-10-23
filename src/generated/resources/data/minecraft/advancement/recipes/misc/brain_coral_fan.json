@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:brain_coral_fan"
+        "recipes": "minecraft:brain_coral_fan"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

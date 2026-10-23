@@ -1,21 +1,21 @@
 package alabaster.crabbersdelight.client.renderer;
 
-import alabaster.crabbersdelight.CrabbersDelight;
 import alabaster.crabbersdelight.common.fishingspot.FishingSpotEntity;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderStateShard;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import org.joml.Matrix4f;
 
-public class FishingSpotRenderer extends EntityRenderer<FishingSpotEntity> {
+/**
+ * Draws the ripples and fish shadows of a fishing spot.
+ */
+public class FishingSpotRenderer extends EntityRenderer<FishingSpotEntity, FishingSpotRenderer.State> {
     private static final float CELL_SIZE = 0.05f;
     private static final int CENTER_LIFETIME_TICKS = 90;
     private static final int CENTER_COUNT = 3;
@@ -50,120 +50,130 @@ public class FishingSpotRenderer extends EntityRenderer<FishingSpotEntity> {
     private static final float FISH_DART_DISTANCE_MULTIPLIER = 4f;
     private static final int FISH_DART_TICKS = 12;
 
-    private static final RenderType WAVE_BAND = RenderType.create(
-            "crabbersdelight_wave_band",
-            DefaultVertexFormat.POSITION_COLOR,
-            VertexFormat.Mode.TRIANGLES,
-            256,
-            RenderType.CompositeState.builder()
-                    .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
-                    .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
-                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
-                    .setOutputState(RenderStateShard.ITEM_ENTITY_TARGET)
-                    .setCullState(RenderStateShard.NO_CULL)
-                    .createCompositeState(false)
-    );
+
+    public static class State extends EntityRenderState {
+        float radius;
+        int lifetimeTicks;
+        boolean disturbed;
+        long entityId;
+    }
 
     public FishingSpotRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
     }
 
     @Override
-    public void render(FishingSpotEntity entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+    public State createRenderState() {
+        return new State();
+    }
+
+    @Override
+    public void extractRenderState(FishingSpotEntity entity, State state, float partialTicks) {
+        super.extractRenderState(entity, state, partialTicks);
+        state.radius = entity.getRadius();
+        state.lifetimeTicks = entity.getLifetimeTicks();
+        state.disturbed = entity.isDisturbed();
+        state.entityId = entity.getId();
+    }
+
+    @Override
+    public void submit(State state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
         poseStack.pushPose();
         poseStack.translate(0, 0.05, 0);
+        // Translucent, unculled position-color quads with view offset, like the original custom render type
+        submitNodeCollector.submitCustomGeometry(poseStack, RenderTypes.debugFilledBox(), (pose, consumer) -> {
+            Matrix4f matrix = pose.pose();
 
-        Matrix4f matrix = poseStack.last().pose();
-        VertexConsumer consumer = buffer.getBuffer(WAVE_BAND);
+                float spotRadius = state.radius;
+                float age = state.ageInTicks;
+                float brightness = lightBrightness(state.lightCoords);
+                long entitySeed = state.entityId;
 
-        float spotRadius = entity.getRadius();
-        float age = entity.tickCount + partialTick;
-        float brightness = lightBrightness(packedLight);
-        long entitySeed = entity.getId();
+                float ticksRemaining = state.lifetimeTicks - age;
+                float ticksSinceDisturbance = state.disturbed
+                        ? Math.max(0f, FishingSpotEntity.EXPIRE_FADE_TICKS - ticksRemaining)
+                        : 0f;
+                float shrinkFactor = ticksRemaining < FishingSpotEntity.EXPIRE_FADE_TICKS
+                        ? smoothstep(Math.max(0f, ticksRemaining) / FishingSpotEntity.EXPIRE_FADE_TICKS)
+                        : 1f;
+                float growFactor = age < FishingSpotEntity.FADE_IN_TICKS
+                        ? smoothstep(age / FishingSpotEntity.FADE_IN_TICKS)
+                        : 1f;
+                spotRadius *= shrinkFactor * growFactor;
 
-        float ticksRemaining = entity.getLifetimeTicks() - age;
-        float ticksSinceDisturbance = entity.isDisturbed()
-                ? Math.max(0f, FishingSpotEntity.EXPIRE_FADE_TICKS - ticksRemaining)
-                : 0f;
-        float shrinkFactor = ticksRemaining < FishingSpotEntity.EXPIRE_FADE_TICKS
-                ? smoothstep(Math.max(0f, ticksRemaining) / FishingSpotEntity.EXPIRE_FADE_TICKS)
-                : 1f;
-        float growFactor = age < FishingSpotEntity.FADE_IN_TICKS
-                ? smoothstep(age / FishingSpotEntity.FADE_IN_TICKS)
-                : 1f;
-        spotRadius *= shrinkFactor * growFactor;
+                for (int fish = 0; fish < FISH_COUNT; fish++) {
+                    float fishOffset = (FISH_CYCLE_TICKS / (float) FISH_COUNT) * fish;
+                    float fishShiftedAge = age + fishOffset;
+                    float fishCycleAge = fishShiftedAge % FISH_CYCLE_TICKS;
+                    long fishCycleIteration = (long) (fishShiftedAge / FISH_CYCLE_TICKS);
+                    long fishSeed = entitySeed * 1000003L + fish * 613L + fishCycleIteration * 2862933555777941757L;
 
-        for (int fish = 0; fish < FISH_COUNT; fish++) {
-            float fishOffset = (FISH_CYCLE_TICKS / (float) FISH_COUNT) * fish;
-            float fishShiftedAge = age + fishOffset;
-            float fishCycleAge = fishShiftedAge % FISH_CYCLE_TICKS;
-            long fishCycleIteration = (long) (fishShiftedAge / FISH_CYCLE_TICKS);
-            long fishSeed = entitySeed * 1000003L + fish * 613L + fishCycleIteration * 2862933555777941757L;
+                    if (fishCycleAge >= FISH_VISIBLE_TICKS) {
+                        continue;
+                    }
 
-            if (fishCycleAge >= FISH_VISIBLE_TICKS) {
-                continue;
-            }
+                    float fishAlpha = FISH_ALPHA;
+                    if (fishCycleAge < FISH_FADE_TICKS) {
+                        fishAlpha *= smoothstep(fishCycleAge / FISH_FADE_TICKS);
+                    } else if (fishCycleAge > FISH_VISIBLE_TICKS - FISH_FADE_TICKS) {
+                        fishAlpha *= smoothstep((FISH_VISIBLE_TICKS - fishCycleAge) / FISH_FADE_TICKS);
+                    }
+                    if (state.disturbed) {
+                        fishAlpha *= 1f - smoothstep(ticksSinceDisturbance / FishingSpotEntity.EXPIRE_FADE_TICKS);
+                    }
 
-            float fishAlpha = FISH_ALPHA;
-            if (fishCycleAge < FISH_FADE_TICKS) {
-                fishAlpha *= smoothstep(fishCycleAge / FISH_FADE_TICKS);
-            } else if (fishCycleAge > FISH_VISIBLE_TICKS - FISH_FADE_TICKS) {
-                fishAlpha *= smoothstep((FISH_VISIBLE_TICKS - fishCycleAge) / FISH_FADE_TICKS);
-            }
-            if (entity.isDisturbed()) {
-                fishAlpha *= 1f - smoothstep(ticksSinceDisturbance / FishingSpotEntity.EXPIRE_FADE_TICKS);
-            }
+                    float orbitAngleOffset = randomFloat(fishSeed, 3) * 2f * (float) Math.PI;
+                    float orbitRadius = spotRadius * (0.25f + randomFloat(fishSeed, 4) * 0.5f);
+                    float orbitDirection = randomFloat(fishSeed, 5) > 0.5f ? 1f : -1f;
+                    float speedWobbleFreq = 0.03f + randomFloat(fishSeed, 6) * 0.05f;
+                    float speedWobblePhase = randomFloat(fishSeed, 7) * 2f * (float) Math.PI;
+                    float radiusWobbleFreq = 0.02f + randomFloat(fishSeed, 8) * 0.04f;
+                    float radiusWobblePhase = randomFloat(fishSeed, 9) * 2f * (float) Math.PI;
+                    float verticalFreq = 0.015f + randomFloat(fishSeed, 10) * 0.025f;
+                    float verticalPhase = randomFloat(fishSeed, 11) * 2f * (float) Math.PI;
+                    float baseDepth = -(FISH_MIN_DEPTH + randomFloat(fishSeed, 12) * (FISH_MAX_DEPTH - FISH_MIN_DEPTH));
 
-            float orbitAngleOffset = randomFloat(fishSeed, 3) * 2f * (float) Math.PI;
-            float orbitRadius = spotRadius * (0.25f + randomFloat(fishSeed, 4) * 0.5f);
-            float orbitDirection = randomFloat(fishSeed, 5) > 0.5f ? 1f : -1f;
-            float speedWobbleFreq = 0.03f + randomFloat(fishSeed, 6) * 0.05f;
-            float speedWobblePhase = randomFloat(fishSeed, 7) * 2f * (float) Math.PI;
-            float radiusWobbleFreq = 0.02f + randomFloat(fishSeed, 8) * 0.04f;
-            float radiusWobblePhase = randomFloat(fishSeed, 9) * 2f * (float) Math.PI;
-            float verticalFreq = 0.015f + randomFloat(fishSeed, 10) * 0.025f;
-            float verticalPhase = randomFloat(fishSeed, 11) * 2f * (float) Math.PI;
-            float baseDepth = -(FISH_MIN_DEPTH + randomFloat(fishSeed, 12) * (FISH_MAX_DEPTH - FISH_MIN_DEPTH));
+                    float[] herePos = fishOrbitPosition(fishCycleAge, orbitAngleOffset, orbitRadius, orbitDirection,
+                            speedWobbleFreq, speedWobblePhase, radiusWobbleFreq, radiusWobblePhase, verticalFreq, verticalPhase);
+                    float[] aheadPos = fishOrbitPosition(fishCycleAge + 1f, orbitAngleOffset, orbitRadius, orbitDirection,
+                            speedWobbleFreq, speedWobblePhase, radiusWobbleFreq, radiusWobblePhase, verticalFreq, verticalPhase);
 
-            float[] herePos = fishOrbitPosition(fishCycleAge, orbitAngleOffset, orbitRadius, orbitDirection,
-                    speedWobbleFreq, speedWobblePhase, radiusWobbleFreq, radiusWobblePhase, verticalFreq, verticalPhase);
-            float[] aheadPos = fishOrbitPosition(fishCycleAge + 1f, orbitAngleOffset, orbitRadius, orbitDirection,
-                    speedWobbleFreq, speedWobblePhase, radiusWobbleFreq, radiusWobblePhase, verticalFreq, verticalPhase);
+                    if (state.disturbed) {
+                        float dartBoostHere = 1f + smoothstep(ticksSinceDisturbance / FISH_DART_TICKS) * FISH_DART_DISTANCE_MULTIPLIER;
+                        float dartBoostAhead = 1f + smoothstep((ticksSinceDisturbance + 1f) / FISH_DART_TICKS) * FISH_DART_DISTANCE_MULTIPLIER;
+                        herePos[0] *= dartBoostHere;
+                        herePos[2] *= dartBoostHere;
+                        aheadPos[0] *= dartBoostAhead;
+                        aheadPos[2] *= dartBoostAhead;
+                    }
 
-            if (entity.isDisturbed()) {
-                float dartBoostHere = 1f + smoothstep(ticksSinceDisturbance / FISH_DART_TICKS) * FISH_DART_DISTANCE_MULTIPLIER;
-                float dartBoostAhead = 1f + smoothstep((ticksSinceDisturbance + 1f) / FISH_DART_TICKS) * FISH_DART_DISTANCE_MULTIPLIER;
-                herePos[0] *= dartBoostHere;
-                herePos[2] *= dartBoostHere;
-                aheadPos[0] *= dartBoostAhead;
-                aheadPos[2] *= dartBoostAhead;
-            }
+                    float facingAngle = (float) Math.atan2(aheadPos[2] - herePos[2], aheadPos[0] - herePos[0]);
 
-            float facingAngle = (float) Math.atan2(aheadPos[2] - herePos[2], aheadPos[0] - herePos[0]);
+                    drawFish(consumer, matrix, herePos[0], baseDepth + herePos[1], herePos[2], facingAngle, fishAlpha);
+                }
 
-            drawFish(consumer, matrix, herePos[0], baseDepth + herePos[1], herePos[2], facingAngle, fishAlpha);
-        }
+                for (int center = 0; center < CENTER_COUNT; center++) {
+                    float centerOffset = (CENTER_LIFETIME_TICKS / (float) CENTER_COUNT) * center;
+                    float shiftedAge = age + centerOffset;
+                    float centerAge = shiftedAge % CENTER_LIFETIME_TICKS;
+                    float progress = centerAge / CENTER_LIFETIME_TICKS;
+                    long cycleIteration = (long) (shiftedAge / CENTER_LIFETIME_TICKS);
+                    long positionSeed = entitySeed * 1000003L + center * 97L + cycleIteration * 6364136223846793005L;
 
-        for (int center = 0; center < CENTER_COUNT; center++) {
-            float centerOffset = (CENTER_LIFETIME_TICKS / (float) CENTER_COUNT) * center;
-            float shiftedAge = age + centerOffset;
-            float centerAge = shiftedAge % CENTER_LIFETIME_TICKS;
-            float progress = centerAge / CENTER_LIFETIME_TICKS;
-            long cycleIteration = (long) (shiftedAge / CENTER_LIFETIME_TICKS);
-            long positionSeed = entitySeed * 1000003L + center * 97L + cycleIteration * 6364136223846793005L;
+                    float centerAngle = randomFloat(positionSeed, 1) * 2f * (float) Math.PI;
+                    float centerDist = randomFloat(positionSeed, 2) * spotRadius * CENTER_SPREAD_FRACTION;
+                    float centerX = (float) Math.cos(centerAngle) * centerDist;
+                    float centerZ = (float) Math.sin(centerAngle) * centerDist;
 
-            float centerAngle = randomFloat(positionSeed, 1) * 2f * (float) Math.PI;
-            float centerDist = randomFloat(positionSeed, 2) * spotRadius * CENTER_SPREAD_FRACTION;
-            float centerX = (float) Math.cos(centerAngle) * centerDist;
-            float centerZ = (float) Math.sin(centerAngle) * centerDist;
+                    long waveSeed = positionSeed * 2862933555777941757L;
+                    float waveMaxRadius = spotRadius * CENTER_MAX_RADIUS_FRACTION;
 
-            long waveSeed = positionSeed * 2862933555777941757L;
-            float waveMaxRadius = spotRadius * CENTER_MAX_RADIUS_FRACTION;
+                    renderWaveBand(consumer, matrix, centerX, centerZ, waveMaxRadius, progress, brightness, waveSeed);
+                }
 
-            renderWaveBand(consumer, matrix, centerX, centerZ, waveMaxRadius, progress, brightness, waveSeed);
-        }
-
+        });
         poseStack.popPose();
+        super.submit(state, poseStack, submitNodeCollector, camera);
     }
 
     private static void renderWaveBand(VertexConsumer consumer, Matrix4f matrix, float centerX, float centerZ, float maxRadius, float progress, float brightness, long seed) {
@@ -245,9 +255,6 @@ public class FishingSpotRenderer extends EntityRenderer<FishingSpotEntity> {
         addFishVertex(consumer, matrix, centerX, centerY, centerZ, cos, sin, x0, y0, alpha);
         addFishVertex(consumer, matrix, centerX, centerY, centerZ, cos, sin, x1, y0, alpha);
         addFishVertex(consumer, matrix, centerX, centerY, centerZ, cos, sin, x1, y1, alpha);
-
-        addFishVertex(consumer, matrix, centerX, centerY, centerZ, cos, sin, x0, y0, alpha);
-        addFishVertex(consumer, matrix, centerX, centerY, centerZ, cos, sin, x1, y1, alpha);
         addFishVertex(consumer, matrix, centerX, centerY, centerZ, cos, sin, x0, y1, alpha);
     }
 
@@ -267,9 +274,6 @@ public class FishingSpotRenderer extends EntityRenderer<FishingSpotEntity> {
 
         addVertex(consumer, matrix, x0, 0, z0, brightness);
         addVertex(consumer, matrix, x1, 0, z0, brightness);
-        addVertex(consumer, matrix, x1, 0, z1, brightness);
-
-        addVertex(consumer, matrix, x0, 0, z0, brightness);
         addVertex(consumer, matrix, x1, 0, z1, brightness);
         addVertex(consumer, matrix, x0, 0, z1, brightness);
     }
@@ -291,12 +295,7 @@ public class FishingSpotRenderer extends EntityRenderer<FishingSpotEntity> {
     }
 
     @Override
-    public ResourceLocation getTextureLocation(FishingSpotEntity entity) {
-        return null;
-    }
-
-    @Override
-    public boolean shouldRender(FishingSpotEntity entity, Frustum frustum, double x, double y, double z) {
+    public boolean shouldRender(FishingSpotEntity entity, Frustum frustum, double x, double y, double z, float partialTicks) {
         return true;
     }
 }

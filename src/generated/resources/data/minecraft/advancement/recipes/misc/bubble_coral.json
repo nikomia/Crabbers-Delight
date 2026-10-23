@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:bubble_coral"
+        "recipes": "minecraft:bubble_coral"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

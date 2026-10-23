@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "P": {
-      "item": "crabbersdelight:pearl"
-    },
-    "S": {
-      "item": "minecraft:string"
-    }
+    "P": "crabbersdelight:pearl",
+    "S": "minecraft:string"
   },
   "pattern": [
     " P ",
@@ -15,7 +11,6 @@
     " P "
   ],
   "result": {
-    "count": 1,
     "id": "crabbersdelight:pearl_necklace"
   }
 }

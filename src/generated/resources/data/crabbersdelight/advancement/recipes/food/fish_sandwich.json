@@ -23,7 +23,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:fish_sandwich"
+        "recipes": "crabbersdelight:fish_sandwich"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

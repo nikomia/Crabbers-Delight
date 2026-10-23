@@ -1,7 +1,19 @@
 {
   "variants": {
-    "": {
-      "model": "crabbersdelight:block/palm_sign"
+    "facing=east": {
+      "model": "crabbersdelight:block/palm_wall_sign",
+      "y": 270
+    },
+    "facing=north": {
+      "model": "crabbersdelight:block/palm_wall_sign",
+      "y": 180
+    },
+    "facing=south": {
+      "model": "crabbersdelight:block/palm_wall_sign"
+    },
+    "facing=west": {
+      "model": "crabbersdelight:block/palm_wall_sign",
+      "y": 90
     }
   }
 }

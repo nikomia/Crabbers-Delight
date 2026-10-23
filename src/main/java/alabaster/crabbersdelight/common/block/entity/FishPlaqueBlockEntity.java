@@ -1,24 +1,25 @@
 package alabaster.crabbersdelight.common.block.entity;
 
+import alabaster.crabbersdelight.common.block.FishPlaqueBlock;
 import alabaster.crabbersdelight.common.registry.CDModBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.Containers;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import org.jspecify.annotations.Nullable;
 
 public class FishPlaqueBlockEntity extends BlockEntity {
 
-    @Nullable private EntityType<?> entityType = null;
+    private @Nullable EntityType<?> entityType = null;
     private CompoundTag entityData = new CompoundTag();
     private ItemStack sourceBucket = ItemStack.EMPTY;
     private int dataVersion = 0;
@@ -31,8 +32,7 @@ public class FishPlaqueBlockEntity extends BlockEntity {
         return entityType != null;
     }
 
-    @Nullable
-    public EntityType<?> getEntityType() {
+    public @Nullable EntityType<?> getEntityType() {
         return entityType;
     }
 
@@ -65,31 +65,37 @@ public class FishPlaqueBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        if (level != null && hasFish()) {
+            Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), FishPlaqueBlock.buildReturnBucket(this));
+        }
+        super.preRemoveSideEffects(pos, state);
+    }
+
+    @Override
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
         if (entityType != null) {
-            tag.putString("EntityType", BuiltInRegistries.ENTITY_TYPE.getKey(entityType).toString());
+            output.putString("EntityType", BuiltInRegistries.ENTITY_TYPE.getKey(entityType).toString());
             if (!entityData.isEmpty()) {
-                tag.put("EntityData", entityData.copy());
+                output.store("EntityData", CompoundTag.CODEC, entityData.copy());
             }
             if (!sourceBucket.isEmpty()) {
-                tag.put("SourceBucket", sourceBucket.save(registries));
+                output.store("SourceBucket", ItemStack.CODEC, sourceBucket);
             }
         }
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
         this.dataVersion++;
 
-        if (tag.contains("EntityType")) {
-            ResourceLocation rl = ResourceLocation.parse(tag.getString("EntityType"));
-            this.entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(rl).orElse(null);
-            this.entityData = tag.contains("EntityData") ? tag.getCompound("EntityData").copy() : new CompoundTag();
-            this.sourceBucket = tag.contains("SourceBucket")
-                    ? ItemStack.parseOptional(registries, tag.getCompound("SourceBucket"))
-                    : ItemStack.EMPTY;
+        Identifier typeId = input.getString("EntityType").map(Identifier::tryParse).orElse(null);
+        if (typeId != null) {
+            this.entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(typeId).orElse(null);
+            this.entityData = input.read("EntityData", CompoundTag.CODEC).map(CompoundTag::copy).orElseGet(CompoundTag::new);
+            this.sourceBucket = input.read("SourceBucket", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         } else {
             this.entityType = null;
             this.entityData = new CompoundTag();
@@ -99,31 +105,11 @@ public class FishPlaqueBlockEntity extends BlockEntity {
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        CompoundTag tag = new CompoundTag();
-        if (entityType != null) {
-            tag.putString("EntityType", BuiltInRegistries.ENTITY_TYPE.getKey(entityType).toString());
-            if (!entityData.isEmpty()) {
-                tag.put("EntityData", entityData.copy());
-            }
-        }
-        return tag;
+        return saveWithoutMetadata(registries);
     }
 
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider lookupProvider) {
-        CompoundTag tag = pkt.getTag();
-        if (tag != null) {
-            loadAdditional(tag, lookupProvider);
-        }
-    }
-
-    @Override
-    public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
-        loadAdditional(tag, registries);
-    }
-
-    @Override
-    public @Nullable Packet<ClientGamePacketListener> getUpdatePacket() {
+    public @Nullable ClientboundBlockEntityDataPacket getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
     }
 }

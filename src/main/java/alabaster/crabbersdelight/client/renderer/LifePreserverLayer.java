@@ -1,45 +1,45 @@
 package alabaster.crabbersdelight.client.renderer;
 
+import alabaster.crabbersdelight.CrabbersDelight;
 import alabaster.crabbersdelight.common.block.LifePreserverBlock;
-import alabaster.crabbersdelight.common.registry.CDModItems;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.util.context.ContextKey;
 
-public class LifePreserverLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
+/**
+ * Draws a worn life preserver around the waist of any living entity.
+ */
+public class LifePreserverLayer<S extends LivingEntityRenderState, M extends EntityModel<? super S>> extends RenderLayer<S, M> {
+    // Filled by a render state modifier when the entity wears a life preserver
+    public static final ContextKey<ItemStackRenderState> WORN_LIFE_PRESERVER = new ContextKey<>(CrabbersDelight.modPrefix("worn_life_preserver"));
+
     private static final float FLIP_ROTATION_DEGREES = 90f;
     private static final float RENDER_SCALE = 2.0f;
     private static final double RENDER_Y_OFFSET = 2.0 / 16.0;
 
-    public LifePreserverLayer(RenderLayerParent<T, M> renderer) {
+    public LifePreserverLayer(RenderLayerParent<S, M> renderer) {
         super(renderer);
     }
 
     @Override
-    public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, T entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-        ItemStack stack = entity.getItemBySlot(EquipmentSlot.LEGS);
-        if (!stack.is(CDModItems.LIFE_PRESERVER.get())) {
+    public void submit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, S state, float yRot, float xRot) {
+        ItemStackRenderState item = state.getRenderData(WORN_LIFE_PRESERVER);
+        if (item == null || item.isEmpty()) {
             return;
         }
 
         poseStack.pushPose();
         poseStack.translate(0, LifePreserverBlock.WAIST_HEIGHT - RENDER_Y_OFFSET, 0);
-        poseStack.mulPose(Axis.XP.rotationDegrees(FLIP_ROTATION_DEGREES));
+        poseStack.rotate(Axis.XP.rotationDegrees(FLIP_ROTATION_DEGREES));
         poseStack.scale(RENDER_SCALE, RENDER_SCALE, RENDER_SCALE);
-
-        ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
-        itemRenderer.renderStatic(stack, ItemDisplayContext.FIXED, packedLight, OverlayTexture.NO_OVERLAY, poseStack, buffer, entity.level(), 0);
-
+        item.submit(poseStack, submitNodeCollector, lightCoords, OverlayTexture.NO_OVERLAY, state.outlineColor);
         poseStack.popPose();
     }
 }

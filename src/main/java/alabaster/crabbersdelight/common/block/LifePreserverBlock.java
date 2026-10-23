@@ -1,27 +1,28 @@
 package alabaster.crabbersdelight.common.block;
 
 import alabaster.crabbersdelight.common.entity.LifePreserverSeat;
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
@@ -30,17 +31,16 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
-public class LifePreserverBlock extends Block implements Equipable {
+public class LifePreserverBlock extends Block {
 
     public static final double WAIST_HEIGHT = 0.7;
     public static final EnumProperty<AttachFace> FACE = BlockStateProperties.ATTACH_FACE;
-    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
-    public static final MapCodec<LifePreserverBlock> CODEC = simpleCodec(LifePreserverBlock::new);
 
     private static final VoxelShape FLOOR_SHAPE = Shapes.or(
             Block.box(0, 0, 0, 16, 4, 4),
@@ -79,18 +79,13 @@ public class LifePreserverBlock extends Block implements Equipable {
     private static VoxelShape rotateClockwise90(VoxelShape shape) {
         VoxelShape result = Shapes.empty();
         for (AABB box : shape.toAabbs()) {
-            double newMinX = 1 - box.maxZ;
-            double newMaxX = 1 - box.minZ;
-            double newMinZ = box.minX;
-            double newMaxZ = box.maxX;
-            result = Shapes.or(result, Shapes.box(newMinX, box.minY, newMinZ, newMaxX, box.maxY, newMaxZ));
+            result = Shapes.or(result, Shapes.box(1 - box.maxZ, box.minY, box.minX, 1 - box.minZ, box.maxY, box.maxX));
         }
         return result;
     }
 
     private static VoxelShape shapeFor(VoxelShape[] shapesByIndex, Direction facing) {
         return switch (facing) {
-            case SOUTH -> shapesByIndex[0];
             case WEST -> shapesByIndex[1];
             case NORTH -> shapesByIndex[2];
             case EAST -> shapesByIndex[3];
@@ -104,11 +99,6 @@ public class LifePreserverBlock extends Block implements Equipable {
                 .setValue(FACE, AttachFace.FLOOR)
                 .setValue(FACING, Direction.NORTH)
                 .setValue(WATERLOGGED, false));
-    }
-
-    @Override
-    protected MapCodec<LifePreserverBlock> codec() {
-        return CODEC;
     }
 
     @Override
@@ -136,15 +126,16 @@ public class LifePreserverBlock extends Block implements Equipable {
     }
 
     @Override
-    protected BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
+    protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction,
+                                     BlockPos neighbourPos, BlockState neighbourState, RandomSource random) {
         if (state.getValue(WATERLOGGED)) {
-            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
+            ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
-        return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
+        return super.updateShape(state, level, ticks, pos, direction, neighbourPos, neighbourState, random);
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return switch (state.getValue(FACE)) {
             case WALL -> shapeFor(WALL_SHAPES_BY_HORIZONTAL_INDEX, state.getValue(FACING));
             case CEILING -> shapeFor(MIDDLE_SHAPES_BY_HORIZONTAL_INDEX, state.getValue(FACING));
@@ -168,10 +159,10 @@ public class LifePreserverBlock extends Block implements Equipable {
             return InteractionResult.PASS;
         }
 
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             level.removeBlock(pos, false);
             player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(this));
-            level.playSound(null, pos, getEquipSound().value(), SoundSource.PLAYERS, 1.0F, 1.0F);
+            level.playSound(null, pos, SoundEvents.ARMOR_EQUIP_GENERIC.value(), SoundSource.PLAYERS, 1.0F, 1.0F);
         }
         return InteractionResult.SUCCESS;
     }
@@ -180,7 +171,7 @@ public class LifePreserverBlock extends Block implements Equipable {
         if (player.isPassenger()) {
             return InteractionResult.PASS;
         }
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
 
@@ -197,14 +188,14 @@ public class LifePreserverBlock extends Block implements Equipable {
         return InteractionResult.SUCCESS;
     }
 
-    @Nullable
-    private LifePreserverSeat getSeat(Level level, BlockPos pos) {
+    private static @Nullable LifePreserverSeat getSeat(Level level, BlockPos pos) {
         AABB box = new AABB(pos).inflate(0.3, 0.5, 0.3);
         List<LifePreserverSeat> seats = level.getEntitiesOfClass(LifePreserverSeat.class, box);
         return seats.isEmpty() ? null : seats.get(0);
     }
 
-    private void clearSeat(Level level, BlockPos pos) {
+    @Override
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
         LifePreserverSeat seat = getSeat(level, pos);
         if (seat != null) {
             for (Entity passenger : seat.getPassengers()) {
@@ -212,18 +203,6 @@ public class LifePreserverBlock extends Block implements Equipable {
             }
             seat.discard();
         }
-    }
-
-    @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.is(newState.getBlock())) {
-            clearSeat(level, pos);
-        }
-        super.onRemove(state, level, pos, newState, isMoving);
-    }
-
-    @Override
-    public EquipmentSlot getEquipmentSlot() {
-        return EquipmentSlot.LEGS;
+        super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
     }
 }

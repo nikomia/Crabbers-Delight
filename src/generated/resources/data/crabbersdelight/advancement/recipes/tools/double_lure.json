@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:double_lure"
+        "recipes": "crabbersdelight:double_lure"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

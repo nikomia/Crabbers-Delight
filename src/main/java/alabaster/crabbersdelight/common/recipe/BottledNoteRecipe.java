@@ -6,19 +6,17 @@ import alabaster.crabbersdelight.common.item.component.SignedNoteContent;
 import alabaster.crabbersdelight.common.registry.CDModDataComponents;
 import alabaster.crabbersdelight.common.registry.CDModItems;
 import alabaster.crabbersdelight.common.registry.CDModRecipeSerializers;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
+/**
+ * Signed note + glass bottle (+ optional reward items of one kind) = bottled note.
+ */
 public class BottledNoteRecipe extends CustomRecipe {
-    public BottledNoteRecipe(CraftingBookCategory category) {
-        super(category);
-    }
 
     @Override
     public boolean matches(CraftingInput input, Level level) {
@@ -49,7 +47,7 @@ public class BottledNoteRecipe extends CustomRecipe {
     }
 
     @Override
-    public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
+    public ItemStack assemble(CraftingInput input) {
         ItemStack signedNote = ItemStack.EMPTY;
         int bottleCount = 0;
         ItemStack rewardStack = ItemStack.EMPTY;
@@ -67,9 +65,9 @@ public class BottledNoteRecipe extends CustomRecipe {
             } else if (stack.is(Items.GLASS_BOTTLE)) {
                 bottleCount++;
             } else if (rewardStack.isEmpty()) {
-                rewardStack = stack.copy();
+                rewardStack = stack.copyWithCount(1);
             } else if (rewardStack.is(stack.getItem())) {
-                rewardStack.grow(stack.getCount());
+                rewardStack.grow(1);
             } else {
                 return ItemStack.EMPTY;
             }
@@ -89,12 +87,7 @@ public class BottledNoteRecipe extends CustomRecipe {
     }
 
     @Override
-    public RecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<BottledNoteRecipe> getSerializer() {
         return CDModRecipeSerializers.BOTTLED_NOTE.get();
-    }
-
-    @Override
-    public boolean canCraftInDimensions(int width, int height) {
-        return width * height >= 2;
     }
 }

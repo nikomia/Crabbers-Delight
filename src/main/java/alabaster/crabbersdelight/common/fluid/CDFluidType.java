@@ -9,23 +9,26 @@ import java.util.function.Supplier;
 
 public class CDFluidType extends BaseFlowingFluid {
     private final boolean source;
-    private final Supplier<Item> bottleItem;
+    private final Supplier<? extends Item> bottleItem;
 
-    public CDFluidType(BaseFlowingFluid.Properties properties, boolean source, Supplier<Item> bottleItem, int unused) {
+    public CDFluidType(BaseFlowingFluid.Properties properties, boolean source, Supplier<? extends Item> bottleItem) {
         super(properties);
         this.source = source;
         this.bottleItem = bottleItem;
     }
 
-    @Override public Fluid getSource() {
+    @Override
+    public Fluid getSource() {
         return source ? this : super.getSource();
     }
 
-    @Override public Fluid getFlowing() {
+    @Override
+    public Fluid getFlowing() {
         return source ? super.getFlowing() : this;
     }
 
-    @Override public boolean isSource(FluidState fluidState) {
+    @Override
+    public boolean isSource(FluidState fluidState) {
         return source;
     }
 

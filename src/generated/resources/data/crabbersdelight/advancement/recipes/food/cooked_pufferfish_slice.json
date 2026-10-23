@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:cooked_pufferfish_slice"
+        "recipes": "crabbersdelight:cooked_pufferfish_slice"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

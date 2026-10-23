@@ -33,7 +33,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:seashells"
+        "recipes": "crabbersdelight:seashells"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

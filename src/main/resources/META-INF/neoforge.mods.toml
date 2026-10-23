@@ -1,36 +1,36 @@
-
 modLoader="javafml"
-loaderVersion="${loader_version_range}"
-license="${mod_license}"
+loaderVersion="[4,)"
+license="MIT"
 
 [[mods]]
-modId="${mod_id}"
-version="${mod_version}"
-displayName="${mod_name}"
-logoFile="logo.png"
-authors="${mod_authors}"
-description='''${mod_description}'''
+modId="crabbersdelight"
+version="${version}"
+displayName="Crabber's Delight"
+authors="AlabasterLeking (original), NeoForge 26.3 port"
+description='''A maritime addon for Farmer's Delight!'''
+displayURL="https://modrinth.com/mod/crabbers-delight"
+bannerFile="logo.png"
 
 [[mixins]]
 config = "crabbersdelight.mixins.json"
 
-[[dependencies.${mod_id}]]
+[[dependencies.crabbersdelight]]
 modId="neoforge"
 type="required"
-versionRange="${neo_version_range}"
+versionRange="[26.3.0.83,)"
 ordering="NONE"
 side="BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.crabbersdelight]]
 modId="minecraft"
 type="required"
-versionRange="${minecraft_version_range}"
+versionRange="[26.3,26.4)"
 ordering="NONE"
 side="BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.crabbersdelight]]
 modId="farmersdelight"
 type="required"
-versionRange="1.3.0"
-ordering="NONE"
+versionRange="[1.3.3,)"
+ordering="AFTER"
 side="BOTH"

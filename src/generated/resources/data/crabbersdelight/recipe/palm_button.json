@@ -3,12 +3,9 @@
   "category": "redstone",
   "group": "wooden_button",
   "ingredients": [
-    {
-      "item": "crabbersdelight:palm_planks"
-    }
+    "crabbersdelight:palm_planks"
   ],
   "result": {
-    "count": 1,
     "id": "crabbersdelight:palm_button"
   }
 }

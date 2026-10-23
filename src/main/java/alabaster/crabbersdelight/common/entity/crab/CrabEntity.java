@@ -1,7 +1,7 @@
 package alabaster.crabbersdelight.common.entity.crab;
 
-import alabaster.crabbersdelight.common.registry.CDModItems;
 import alabaster.crabbersdelight.common.registry.CDModEntities;
+import alabaster.crabbersdelight.common.registry.CDModItems;
 import alabaster.crabbersdelight.common.tags.CDModTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -24,33 +24,25 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.animal.Bucketable;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.item.DyeItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.fluids.FluidType;
-import org.jetbrains.annotations.Nullable;
-
-import javax.annotation.Nonnull;
-import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 public class CrabEntity extends Animal implements Bucketable {
-    private static EntityDataAccessor<Boolean> FROM_BUCKET = SynchedEntityData.defineId(CrabEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> FROM_BUCKET = SynchedEntityData.defineId(CrabEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> VARIANT = SynchedEntityData.defineId(CrabEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Byte> DATA_FLAGS_ID = SynchedEntityData.defineId(CrabEntity.class, EntityDataSerializers.BYTE);
-    private Ingredient temptationItems;
     public final AnimationState idleAnimationState = new AnimationState();
     private int idleAnimationTimeout = 0;
-
 
     public CrabEntity(EntityType<? extends Animal> entityType, Level level) {
         super(entityType, level);
@@ -61,14 +53,14 @@ public class CrabEntity extends Animal implements Bucketable {
         this.goalSelector.addGoal(0, new RandomLookAroundGoal(this));
         this.goalSelector.addGoal(1, new PanicGoal(this, 2.0));
         this.goalSelector.addGoal(2, new BreedGoal(this, 1.0));
-        this.goalSelector.addGoal(3, new TemptGoal(this, 0.75, getTemptationItems(), false));
+        this.goalSelector.addGoal(3, new TemptGoal(this, 0.75, stack -> stack.is(CDModTags.CRAB_TEMPT_ITEM), false));
         this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.1));
         this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 6.0F));
         this.goalSelector.addGoal(6, new RandomStrollGoal(this, 1.0));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Animal.createLivingAttributes()
+        return Animal.createAnimalAttributes()
                 .add(Attributes.MAX_HEALTH, 10)
                 .add(Attributes.MOVEMENT_SPEED, 0.2f)
                 .add(Attributes.ATTACK_KNOCKBACK, 1.5f)
@@ -83,23 +75,18 @@ public class CrabEntity extends Animal implements Bucketable {
         return 100;
     }
 
-    protected void handleAirSupply(int airSupply) {
-        this.setAirSupply(this.getMaxAirSupply());
-    }
-
     @Override
     public void baseTick() {
-        int i = this.getAirSupply();
         super.baseTick();
+        // Crabs never drown
         if (!this.isNoAi()) {
-            this.handleAirSupply(i);
+            this.setAirSupply(this.getMaxAirSupply());
         }
     }
 
     @Override
     public void tick() {
         super.tick();
-
         if (this.level().isClientSide()) {
             this.setupAnimationStates();
         }
@@ -116,12 +103,11 @@ public class CrabEntity extends Animal implements Bucketable {
     @Override
     public void aiStep() {
         super.aiStep();
-        if (!this.level().isClientSide) {
+        if (!this.level().isClientSide()) {
             boolean nextToWall = false;
             BlockPos pos = this.blockPosition();
             for (Direction dir : Direction.Plane.HORIZONTAL) {
-                BlockPos neighbour = pos.relative(dir);
-                if (this.level().getBlockState(neighbour).isSolid()) {
+                if (this.level().getBlockState(pos.relative(dir)).isSolid()) {
                     nextToWall = true;
                     break;
                 }
@@ -141,21 +127,17 @@ public class CrabEntity extends Animal implements Bucketable {
 
     public void setClimbing(boolean climbing) {
         byte b = this.entityData.get(DATA_FLAGS_ID);
-        if (climbing) {
-            b = (byte)(b | 1);
-        } else {
-            b = (byte)(b & -2);
-        }
+        b = climbing ? (byte) (b | 1) : (byte) (b & -2);
         this.entityData.set(DATA_FLAGS_ID, b);
     }
 
     @Override
-    public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source) {
+    public boolean causeFallDamage(double fallDistance, float multiplier, DamageSource source) {
         return false;
     }
 
     @Override
-    protected boolean isAffectedByFluids() {
+    public boolean isAffectedByFluids() {
         return false;
     }
 
@@ -165,12 +147,9 @@ public class CrabEntity extends Animal implements Bucketable {
     }
 
     @Override
-    @Nullable
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @javax.annotation.Nullable SpawnGroupData spawnGroupData) {
+    public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, EntitySpawnReason spawnReason, @Nullable SpawnGroupData spawnGroupData) {
         Holder<Biome> holder = level.getBiome(this.blockPosition());
-        if (holder.is(Biomes.MANGROVE_SWAMP)) {
-            this.setVariant(CrabVariant.BLUE);
-        } else if (holder.is(Biomes.BEACH)) {
+        if (holder.is(Biomes.BEACH)) {
             this.setVariant(CrabVariant.RED);
         } else if (holder.is(Biomes.SWAMP)) {
             this.setVariant(CrabVariant.GREEN);
@@ -181,15 +160,12 @@ public class CrabEntity extends Animal implements Bucketable {
         } else {
             this.setVariant(CrabVariant.BLUE);
         }
-        return super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
+        return super.finalizeSpawn(level, difficulty, spawnReason, spawnGroupData);
     }
 
-    public static boolean checkCrabSpawnRules(EntityType<CrabEntity> type, ServerLevelAccessor level, MobSpawnType spawnType, BlockPos pos, RandomSource random) {
-        BlockState stateBelow = level.getBlockState(pos.below());
-        return stateBelow.is(CDModTags.CRAB_SPAWN_ON);
+    public static boolean checkCrabSpawnRules(EntityType<CrabEntity> type, ServerLevelAccessor level, EntitySpawnReason spawnReason, BlockPos pos, RandomSource random) {
+        return level.getBlockState(pos.below()).is(CDModTags.CRAB_SPAWN_ON);
     }
-
-
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
@@ -212,75 +188,27 @@ public class CrabEntity extends Animal implements Bucketable {
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag compound) {
-        super.addAdditionalSaveData(compound);
-        compound.putInt("Variant", this.getTypeVariant());
-        compound.putBoolean("FromBucket", this.fromBucket());
+    protected void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.putInt("Variant", this.getTypeVariant());
+        output.putBoolean("FromBucket", this.fromBucket());
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag compound) {
-        super.readAdditionalSaveData(compound);
-        this.entityData.set(VARIANT, compound.getInt("Variant"));
-        this.entityData.set(FROM_BUCKET, compound.getBoolean("FromBucket"));
+    protected void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        this.entityData.set(VARIANT, input.getIntOr("Variant", 0));
+        this.entityData.set(FROM_BUCKET, input.getBooleanOr("FromBucket", false));
     }
 
     @Override
-    @Nullable
-    public CrabEntity getBreedOffspring(ServerLevel level, AgeableMob otherParent) {
-        CrabEntity baby = CDModEntities.CRAB.get().create(level);
-        if (!(otherParent instanceof CrabEntity otherCrab)) return baby;
+    public @Nullable CrabEntity getBreedOffspring(ServerLevel level, AgeableMob otherParent) {
+        CrabEntity baby = CDModEntities.CRAB.get().create(level, EntitySpawnReason.BREEDING);
+        if (baby == null || !(otherParent instanceof CrabEntity otherCrab)) return baby;
 
-        DyeColor color1 = this.getVariant().getDyeColor();
-        DyeColor color2 = otherCrab.getVariant().getDyeColor();
-
-        DyeColor mixedColor = getMixedDyeColor(level, color1, color2);
-        baby.setVariant(CrabVariant.fromDyeColor(mixedColor != null ? mixedColor : color1));
-
+        DyeColor mixed = DyeColor.getMixedColor(level, this.getVariant().getDyeColor(), otherCrab.getVariant().getDyeColor());
+        baby.setVariant(CrabVariant.fromDyeColor(mixed));
         return baby;
-    }
-
-    @Nullable
-    private static DyeColor getMixedDyeColor(ServerLevel level, DyeColor color1, DyeColor color2) {
-        if (color1 == color2) return color1;
-
-        RecipeManager recipeManager = level.getRecipeManager();
-
-        for (RecipeHolder<CraftingRecipe> holder : recipeManager.getAllRecipesFor(RecipeType.CRAFTING)) {
-            CraftingRecipe recipe = holder.value();
-
-            if (recipe instanceof ShapelessRecipe shapeless
-                    && shapeless.getResultItem(level.registryAccess()).getItem() instanceof net.minecraft.world.item.DyeItem resultDye
-                    && shapeless.getIngredients().size() == 2) { // Only allow recipes with 2 ingredients
-
-                List<DyeColor> inputColors = shapeless.getIngredients().stream()
-                        .map(ingredient -> {
-                            ItemStack[] stacks = ingredient.getItems();
-                            if (stacks.length > 0 && stacks[0].getItem() instanceof net.minecraft.world.item.DyeItem dyeItem) {
-                                return dyeItem.getDyeColor();
-                            }
-                            return null;
-                        })
-                        .filter(c -> c != null)
-                        .toList();
-
-                if (inputColors.size() == 2 &&
-                        ((inputColors.get(0) == color1 && inputColors.get(1) == color2) ||
-                                (inputColors.get(0) == color2 && inputColors.get(1) == color1))) {
-                    return resultDye.getDyeColor();
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private Ingredient getTemptationItems() {
-        if (temptationItems == null)
-            temptationItems = Ingredient.of(
-                    CDModTags.CRAB_TEMPT_ITEM);
-
-        return temptationItems;
     }
 
     @Override
@@ -290,17 +218,16 @@ public class CrabEntity extends Animal implements Bucketable {
 
     @Override
     public void setFromBucket(boolean fromBucket) {
-        this.entityData.set(FROM_BUCKET, true);
+        this.entityData.set(FROM_BUCKET, fromBucket);
     }
 
     @Override
     public boolean isFood(ItemStack stack) {
-        return !stack.isEmpty() && getTemptationItems().test(stack);
+        return stack.is(CDModTags.CRAB_TEMPT_ITEM);
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public void saveToBucketTag(@Nonnull ItemStack stack) {
+    public void saveToBucketTag(ItemStack stack) {
         Bucketable.saveDefaultDataToBucketTag(this, stack);
         CustomData.update(DataComponents.BUCKET_ENTITY_DATA, stack, tag -> {
             tag.putInt("Age", this.getAge());
@@ -309,16 +236,10 @@ public class CrabEntity extends Animal implements Bucketable {
     }
 
     @Override
-    public void loadFromBucketTag(@Nonnull CompoundTag tag) {
+    public void loadFromBucketTag(CompoundTag tag) {
         Bucketable.loadDefaultDataFromBucketTag(this, tag);
-
-        if (tag.contains("Age")) {
-            this.setAge(tag.getInt("Age"));
-        }
-
-        if (tag.contains("Variant")) {
-            this.entityData.set(VARIANT, tag.getInt("Variant"));
-        }
+        tag.getInt("Age").ifPresent(this::setAge);
+        tag.getInt("Variant").ifPresent(variant -> this.entityData.set(VARIANT, variant));
     }
 
     @Override
@@ -332,24 +253,19 @@ public class CrabEntity extends Animal implements Bucketable {
     }
 
     @Override
-    public InteractionResult mobInteract(@Nonnull Player player, @Nonnull InteractionHand hand) {
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
         var result = Bucketable.bucketMobPickup(player, hand, this);
         if (result.isPresent()) {
             return result.get();
         }
 
         ItemStack itemStack = player.getItemInHand(hand);
-        Item item = itemStack.getItem();
-
-        if (item instanceof DyeItem dyeItem) {
-            DyeColor dyeColor = dyeItem.getDyeColor();
+        DyeColor dyeColor = itemStack.get(DataComponents.DYE);
+        if (dyeColor != null) {
             CrabVariant newVariant = CrabVariant.fromDyeColor(dyeColor);
-
             if (newVariant != this.getVariant()) {
                 this.setVariant(newVariant);
-                if (!player.getAbilities().instabuild) {
-                    itemStack.shrink(1);
-                }
+                itemStack.consume(1, player);
                 return InteractionResult.SUCCESS;
             }
         }
@@ -358,7 +274,7 @@ public class CrabEntity extends Animal implements Bucketable {
     }
 
     private void setupAnimationStates() {
-        if(this.idleAnimationTimeout <= 0) {
+        if (this.idleAnimationTimeout <= 0) {
             this.idleAnimationTimeout = 60;
             this.idleAnimationState.start(this.tickCount);
         } else {

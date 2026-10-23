@@ -22,7 +22,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:sea_pickle_juice"
+        "recipes": "crabbersdelight:sea_pickle_juice"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

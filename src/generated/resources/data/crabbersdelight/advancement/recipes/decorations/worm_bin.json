@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:worm_bin"
+        "recipes": "crabbersdelight:worm_bin"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

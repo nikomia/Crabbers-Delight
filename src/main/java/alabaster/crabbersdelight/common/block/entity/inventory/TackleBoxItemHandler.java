@@ -2,8 +2,7 @@ package alabaster.crabbersdelight.common.block.entity.inventory;
 
 import alabaster.crabbersdelight.common.tags.CDModTags;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import org.jetbrains.annotations.NotNull;
+import vectorwing.farmersdelight.refabricated.inventory.ItemStackHandler;
 
 public class TackleBoxItemHandler extends ItemStackHandler {
     public static final int GENERAL_SLOTS = 15;
@@ -18,7 +17,7 @@ public class TackleBoxItemHandler extends ItemStackHandler {
     }
 
     @Override
-    public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+    public boolean isItemValid(int slot, ItemStack stack) {
         if (slot == LURE_SLOT) {
             return stack.is(CDModTags.FISHING_LURE);
         }
@@ -29,5 +28,9 @@ public class TackleBoxItemHandler extends ItemStackHandler {
             return stack.is(CDModTags.FISHING_BAIT);
         }
         return true;
+    }
+
+    public void notifyChanged(int slot) {
+        onContentsChanged(slot);
     }
 }

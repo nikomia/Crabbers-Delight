@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:wormy_dirt"
+        "recipes": "crabbersdelight:wormy_dirt"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

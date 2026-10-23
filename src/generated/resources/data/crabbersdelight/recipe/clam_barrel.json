@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "#": {
-      "item": "crabbersdelight:clam"
-    }
+    "#": "crabbersdelight:clam"
   },
   "pattern": [
     "###",
@@ -12,7 +10,6 @@
     "###"
   ],
   "result": {
-    "count": 1,
     "id": "crabbersdelight:clam_barrel"
   }
 }

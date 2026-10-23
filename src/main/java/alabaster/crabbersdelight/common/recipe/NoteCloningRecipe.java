@@ -6,19 +6,18 @@ import alabaster.crabbersdelight.common.item.component.SignedNoteContent;
 import alabaster.crabbersdelight.common.registry.CDModDataComponents;
 import alabaster.crabbersdelight.common.registry.CDModItems;
 import alabaster.crabbersdelight.common.registry.CDModRecipeSerializers;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
+/**
+ * Signed note + blank notes = copies of the signed note; the original stays in the grid.
+ */
 public class NoteCloningRecipe extends CustomRecipe {
-    public NoteCloningRecipe(CraftingBookCategory category) {
-        super(category);
-    }
 
     @Override
     public boolean matches(CraftingInput input, Level level) {
@@ -46,7 +45,7 @@ public class NoteCloningRecipe extends CustomRecipe {
     }
 
     @Override
-    public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
+    public ItemStack assemble(CraftingInput input) {
         int blankCount = 0;
         ItemStack signedNote = ItemStack.EMPTY;
 
@@ -88,24 +87,19 @@ public class NoteCloningRecipe extends CustomRecipe {
 
         for (int i = 0; i < remaining.size(); i++) {
             ItemStack stack = input.getItem(i);
-            if (stack.hasCraftingRemainingItem()) {
-                remaining.set(i, stack.getCraftingRemainingItem());
+            ItemStackTemplate remainder = stack.getCraftingRemainder();
+            if (remainder != null) {
+                remaining.set(i, remainder.create());
             } else if (stack.getItem() instanceof SignedNoteItem) {
                 remaining.set(i, stack.copyWithCount(1));
                 break;
             }
         }
-
         return remaining;
     }
 
     @Override
-    public RecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<NoteCloningRecipe> getSerializer() {
         return CDModRecipeSerializers.NOTE_CLONING.get();
-    }
-
-    @Override
-    public boolean canCraftInDimensions(int width, int height) {
-        return width * height >= 2;
     }
 }

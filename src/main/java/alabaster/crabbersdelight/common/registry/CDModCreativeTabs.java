@@ -6,19 +6,16 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import vectorwing.farmersdelight.FarmersDelight;
 
 import java.util.function.Supplier;
 
-public class CDModCreativeTabs
-{
+public class CDModCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TAB = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CrabbersDelight.MODID);
 
-    public static final Supplier<CreativeModeTab> TAB_CRABBERS_DELIGHT = CREATIVE_TAB.register(FarmersDelight.MODID,
+    public static final Supplier<CreativeModeTab> TAB_CRABBERS_DELIGHT = CREATIVE_TAB.register(CrabbersDelight.MODID,
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.crabbersdelight"))
                     .icon(() -> new ItemStack(CDModItems.RAW_CRAB.get()))
-                    .displayItems((parameters, output) -> CDModItems.CREATIVE_TAB_ITEMS.forEach(itemLike -> output.accept(itemLike.get())))
-                    .build()
-            );
+                    .displayItems((parameters, output) -> CDModItems.CREATIVE_TAB_ITEMS.forEach(item -> output.accept(item.get())))
+                    .build());
 }

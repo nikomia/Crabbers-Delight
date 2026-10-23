@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:tropical_fish_barrel"
+        "recipes": "crabbersdelight:tropical_fish_barrel"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

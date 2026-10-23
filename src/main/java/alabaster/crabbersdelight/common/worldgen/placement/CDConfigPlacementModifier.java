@@ -3,61 +3,53 @@ package alabaster.crabbersdelight.common.worldgen.placement;
 import alabaster.crabbersdelight.common.Config;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.placement.PlacementContext;
 import net.minecraft.world.level.levelgen.placement.PlacementModifier;
-import net.minecraft.world.level.levelgen.placement.PlacementModifierType;
 
-import java.util.stream.Stream;
+import java.util.function.Consumer;
 
-public class CDConfigPlacementModifier extends PlacementModifier {
-
-    public static final CDConfigPlacementModifier PALM = new CDConfigPlacementModifier("palm");
-    public static final CDConfigPlacementModifier SEASHELL = new CDConfigPlacementModifier("seashell");
-    public static final CDConfigPlacementModifier SEASHELL_UNDERWATER = new CDConfigPlacementModifier("seashell_underwater");
-    public static final CDConfigPlacementModifier WORMY_DIRT = new CDConfigPlacementModifier("wormy_dirt");
-
-    public static final MapCodec<CDConfigPlacementModifier> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
-            Codec.STRING.fieldOf("config_key").forGetter(m -> m.configKey)
-    ).apply(i, CDConfigPlacementModifier::new));
-
-    private final String configKey;
-
-    public CDConfigPlacementModifier(String configKey) {
-        this.configKey = configKey;
-    }
+/**
+ * Applies the enable flag and rarity chance from the common config at generation time.
+ */
+public record CDConfigPlacementModifier(String configKey) implements PlacementModifier {
+    public static final MapCodec<CDConfigPlacementModifier> CODEC =
+            Codec.STRING.fieldOf("config_key").xmap(CDConfigPlacementModifier::new, CDConfigPlacementModifier::configKey);
 
     @Override
-    public Stream<BlockPos> getPositions(PlacementContext context, RandomSource random, BlockPos pos) {
-        return switch (configKey) {
+    public void modify(PlacementContext context, RandomSource random, BlockPos origin, Consumer<BlockPos> output) {
+        boolean enabled;
+        int chance;
+        switch (configKey) {
             case "palm" -> {
-                if (!Config.GENERATE_PALM_TREES.get()) yield Stream.empty();
-                int chance = Config.CHANCE_PALM_TREES.get();
-                yield chance > 0 && random.nextInt(chance) == 0 ? Stream.of(pos) : Stream.empty();
+                enabled = Config.GENERATE_PALM_TREES.get();
+                chance = Config.CHANCE_PALM_TREES.get();
             }
             case "seashell" -> {
-                if (!Config.GENERATE_SEASHELLS.get()) yield Stream.empty();
-                int chance = Config.CHANCE_SEASHELLS.get();
-                yield chance > 0 && random.nextInt(chance) == 0 ? Stream.of(pos) : Stream.empty();
+                enabled = Config.GENERATE_SEASHELLS.get();
+                chance = Config.CHANCE_SEASHELLS.get();
             }
             case "seashell_underwater" -> {
-                if (!Config.GENERATE_SEASHELLS.get()) yield Stream.empty();
-                int chance = Config.CHANCE_SEASHELLS_UNDERWATER.get();
-                yield chance > 0 && random.nextInt(chance) == 0 ? Stream.of(pos) : Stream.empty();
+                enabled = Config.GENERATE_SEASHELLS.get();
+                chance = Config.CHANCE_SEASHELLS_UNDERWATER.get();
             }
             case "wormy_dirt" -> {
-                if (!Config.GENERATE_WORMY_DIRT.get()) yield Stream.empty();
-                int chance = Config.CHANCE_WORMY_DIRT.get();
-                yield chance > 0 && random.nextInt(chance) == 0 ? Stream.of(pos) : Stream.empty();
+                enabled = Config.GENERATE_WORMY_DIRT.get();
+                chance = Config.CHANCE_WORMY_DIRT.get();
             }
-            default -> Stream.of(pos);
-        };
+            default -> {
+                output.accept(origin);
+                return;
+            }
+        }
+        if (enabled && chance > 0 && random.nextInt(chance) == 0) {
+            output.accept(origin);
+        }
     }
 
     @Override
-    public PlacementModifierType<?> type() {
-        return CDPlacementModifiers.CONFIG_FILTER.get();
+    public MapCodec<CDConfigPlacementModifier> codec() {
+        return CODEC;
     }
 }

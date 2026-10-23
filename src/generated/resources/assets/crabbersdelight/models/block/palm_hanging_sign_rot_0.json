@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_hanging_sign_rot_0",
+  "textures": {
+    "all": "crabbersdelight:block/palm_hanging_sign",
+    "particle": "crabbersdelight:block/stripped_palm_log"
+  }
+}

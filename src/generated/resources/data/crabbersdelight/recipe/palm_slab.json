@@ -3,9 +3,7 @@
   "category": "building",
   "group": "wooden_slab",
   "key": {
-    "#": {
-      "item": "crabbersdelight:palm_planks"
-    }
+    "#": "crabbersdelight:palm_planks"
   },
   "pattern": [
     "###"

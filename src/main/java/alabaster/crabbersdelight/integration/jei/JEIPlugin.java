@@ -6,28 +6,29 @@ import alabaster.crabbersdelight.common.tags.CDModTags;
 import alabaster.crabbersdelight.integration.jei.category.CrabTrapCategory;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.recipe.types.IRecipeType;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
-import mezz.jei.api.recipe.RecipeType;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @JeiPlugin
 public class JEIPlugin implements IModPlugin {
-    private static final ResourceLocation PLUGIN_ID = CrabbersDelight.modPrefix("jei_plugin");
-    public static final RecipeType<CrabTrapRecipeWrapper> CRAB_TRAP_RECIPE = RecipeType.create(CrabbersDelight.MODID, "crab_trap_loot", CrabTrapRecipeWrapper.class);
+    private static final Identifier PLUGIN_ID = CrabbersDelight.modPrefix("jei_plugin");
+    public static final IRecipeType<CrabTrapRecipeWrapper> CRAB_TRAP_RECIPE =
+            IRecipeType.create(CrabbersDelight.MODID, "crab_trap_loot", CrabTrapRecipeWrapper.class);
 
     @Override
-    public ResourceLocation getPluginUid() {
+    public Identifier getPluginUid() {
         return PLUGIN_ID;
     }
 
@@ -38,24 +39,27 @@ public class JEIPlugin implements IModPlugin {
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
-        registration.addRecipes(CRAB_TRAP_RECIPE, addWrappers());
+        registration.addRecipes(CRAB_TRAP_RECIPE, crabTrapRecipes());
     }
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(CDModItems.CRAB_TRAP.get()), CRAB_TRAP_RECIPE);
+        registration.addRecipeCatalysts(CRAB_TRAP_RECIPE, CDModItems.CRAB_TRAP.get());
     }
 
-    public List<CrabTrapRecipeWrapper> addWrappers() {
+    // Catches shown per bait come from the jei_display_results/<namespace>/<bait> item tags
+    private static List<CrabTrapRecipeWrapper> crabTrapRecipes() {
         List<CrabTrapRecipeWrapper> list = new ArrayList<>();
-        for (ItemStack item : BuiltInRegistries.ITEM.stream().map(ItemStack::new).toList()) {
-            if (item.is(CDModTags.CRAB_TRAP_BAIT)) {
-                ResourceLocation registryName = BuiltInRegistries.ITEM.getKey(item.getItem());
-                TagKey<Item> outputTag = TagKey.create(Registries.ITEM, CrabbersDelight.modPrefix("jei_display_results/" + registryName.getNamespace() + "/" + registryName.getPath()));
-                if (BuiltInRegistries.ITEM.getTag(outputTag).isPresent()) {
-                    list.add(new CrabTrapRecipeWrapper(item, Ingredient.of(outputTag)));
-                }
-
+        for (Holder<Item> bait : BuiltInRegistries.ITEM.getTagOrEmpty(CDModTags.CRAB_TRAP_BAIT)) {
+            Identifier baitId = BuiltInRegistries.ITEM.getKey(bait.value());
+            TagKey<Item> outputTag = TagKey.create(Registries.ITEM,
+                    CrabbersDelight.modPrefix("jei_display_results/" + baitId.getNamespace() + "/" + baitId.getPath()));
+            List<ItemStack> outputs = new ArrayList<>();
+            for (Holder<Item> output : BuiltInRegistries.ITEM.getTagOrEmpty(outputTag)) {
+                outputs.add(new ItemStack(output));
+            }
+            if (!outputs.isEmpty()) {
+                list.add(new CrabTrapRecipeWrapper(new ItemStack(bait), outputs));
             }
         }
         return list;

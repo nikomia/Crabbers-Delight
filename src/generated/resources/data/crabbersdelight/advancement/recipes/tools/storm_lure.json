@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:storm_lure"
+        "recipes": "crabbersdelight:storm_lure"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

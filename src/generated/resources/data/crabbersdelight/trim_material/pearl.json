@@ -1,9 +1,7 @@
 {
-  "asset_name": "pearl",
   "description": {
     "color": "#86B5BE",
     "translate": "trim_material.crabbersdelight.pearl"
   },
-  "ingredient": "crabbersdelight:pearl",
-  "item_model_index": -1.0
+  "palette_id": "crabbersdelight:trim/pearl"
 }

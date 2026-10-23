@@ -7,8 +7,6 @@ public class Config {
     public static ModConfigSpec COMMON_CONFIG;
 
     public static final String CATEGORY_SETTINGS = "Settings";
-    public static ModConfigSpec.BooleanValue FISHERMAN_BUY_SEAFOOD;
-    public static ModConfigSpec.BooleanValue WANDERING_TRADER_PEARLS;
     public static ModConfigSpec.ConfigValue<Integer> MIN_TICKS;
     public static ModConfigSpec.ConfigValue<Integer> MAX_TICKS;
     public static ModConfigSpec.BooleanValue COOK_IN_POTS;
@@ -47,10 +45,6 @@ public class Config {
         ModConfigSpec.Builder COMMON_BUILDER = new ModConfigSpec.Builder();
 
         COMMON_BUILDER.comment("Game Settings").push(CATEGORY_SETTINGS);
-        FISHERMAN_BUY_SEAFOOD = COMMON_BUILDER.comment("Should fisherman buy/sell items related to this mods items (Seafood and pearls)")
-                .define("fishermanBuyCDItems", true);
-        WANDERING_TRADER_PEARLS = COMMON_BUILDER.comment("Should the Wandering Trader sell items in exchange for pearls?")
-                .define("wanderingTraderDealsPearls", true);
         COOK_IN_POTS = COMMON_BUILDER.comment("Should seafood only be able to be cooked through the Farmer's Delight pot?")
                 .define("cookInPot", true);
         MIN_TICKS = COMMON_BUILDER.comment("Minimum ticks before seafood can be gathered by the crab trap. Default = 4000")

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:magnetic_lure"
+        "recipes": "crabbersdelight:magnetic_lure"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

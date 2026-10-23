@@ -1,0 +1,12 @@
+{
+  "gives": {
+    "id": "crabbersdelight:magnetic_lure"
+  },
+  "max_uses": 3,
+  "reputation_discount": 0.05,
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 8
+  },
+  "xp": 12
+}

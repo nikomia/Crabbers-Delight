@@ -3,38 +3,26 @@ package alabaster.crabbersdelight.common.worldgen;
 import alabaster.crabbersdelight.common.Config;
 import alabaster.crabbersdelight.common.block.SeashellBlock;
 import alabaster.crabbersdelight.common.registry.CDModBlocks;
-import alabaster.crabbersdelight.common.utils.CDStateProviders;
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
-import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProviderType;
 
-public class RandomSeashellStateProvider extends BlockStateProvider {
-    private final boolean waterlogged;
-
-    public RandomSeashellStateProvider(boolean waterlogged) {
-        this.waterlogged = waterlogged;
-    }
-
+public record RandomSeashellStateProvider(boolean waterlogged) implements BlockStateProvider {
     public static final MapCodec<RandomSeashellStateProvider> CODEC =
-            com.mojang.serialization.codecs.RecordCodecBuilder.mapCodec(instance ->
-                    instance.group(
-                            com.mojang.serialization.Codec.BOOL
-                                    .optionalFieldOf("waterlogged", false)
-                                    .forGetter(p -> p.waterlogged)
-                    ).apply(instance, RandomSeashellStateProvider::new)
-            );
+            Codec.BOOL.optionalFieldOf("waterlogged", false).xmap(RandomSeashellStateProvider::new, RandomSeashellStateProvider::waterlogged);
 
     @Override
-    protected BlockStateProviderType<?> type() {
-        return CDStateProviders.RANDOM_SEASHELL.get();
+    public MapCodec<RandomSeashellStateProvider> codec() {
+        return CODEC;
     }
 
     @Override
-    public BlockState getState(RandomSource random, BlockPos pos) {
+    public BlockState getState(LevelAccessor level, RandomSource random, BlockPos pos) {
         int variant = random.nextInt(Config.SEASHELL_VARIANT_COUNT.get());
         Direction facing = Direction.Plane.HORIZONTAL.getRandomDirection(random);
 

@@ -2,25 +2,14 @@
   "type": "farmersdelight:cooking",
   "experience": 2.0,
   "ingredients": [
-    {
-      "item": "crabbersdelight:crab"
-    },
-    {
-      "item": "farmersdelight:wheat_dough"
-    },
-    {
-      "tag": "c:drinks/milk"
-    },
-    {
-      "item": "minecraft:egg"
-    },
-    {
-      "item": "farmersdelight:onion"
-    }
+    "crabbersdelight:crab",
+    "farmersdelight:wheat_dough",
+    "#c:drinks/milk",
+    "minecraft:egg",
+    "farmersdelight:onion"
   ],
   "recipe_book_tab": "meals",
   "result": {
-    "count": 1,
     "id": "crabbersdelight:crab_cakes"
   }
 }

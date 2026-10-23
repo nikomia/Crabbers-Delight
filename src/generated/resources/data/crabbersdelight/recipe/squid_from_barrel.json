@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "crabbersdelight:squid_barrel"
-    }
+    "crabbersdelight:squid_barrel"
   ],
   "result": {
     "count": 9,

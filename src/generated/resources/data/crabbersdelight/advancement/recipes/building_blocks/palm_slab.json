@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:palm_slab"
+        "recipes": "crabbersdelight:palm_slab"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

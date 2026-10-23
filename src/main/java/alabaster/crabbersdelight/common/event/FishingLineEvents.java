@@ -14,7 +14,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.player.ItemFishedEvent;
 
-@EventBusSubscriber(modid = CrabbersDelight.MODID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = CrabbersDelight.MODID)
 public class FishingLineEvents {
     private static final double DISTANCE_MULTIPLIER = 1.5;
 
@@ -53,7 +53,7 @@ public class FishingLineEvents {
             return;
         }
 
-        line.hurtAndBreak(1, player, LivingEntity.getSlotForHand(InteractionHand.MAIN_HAND));
+        line.hurtAndBreak(1, player, InteractionHand.MAIN_HAND);
         tackleBox.setSlot(TackleBoxItemHandler.LINE_SLOT, line);
     }
 }

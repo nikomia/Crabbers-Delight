@@ -16,7 +16,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:squid_kebab"
+        "recipes": "crabbersdelight:squid_kebab"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

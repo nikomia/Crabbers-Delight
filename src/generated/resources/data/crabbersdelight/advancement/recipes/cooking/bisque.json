@@ -18,7 +18,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:cooking/bisque"
+        "recipes": "crabbersdelight:cooking/bisque"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

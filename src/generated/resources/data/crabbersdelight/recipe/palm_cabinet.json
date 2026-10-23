@@ -3,12 +3,8 @@
   "category": "misc",
   "group": "fd_cabinet",
   "key": {
-    "D": {
-      "item": "crabbersdelight:palm_trapdoor_bottom"
-    },
-    "_": {
-      "item": "crabbersdelight:palm_slab"
-    }
+    "D": "crabbersdelight:palm_trapdoor_bottom",
+    "_": "crabbersdelight:palm_slab"
   },
   "pattern": [
     "___",
@@ -16,7 +12,6 @@
     "___"
   ],
   "result": {
-    "count": 1,
     "id": "crabbersdelight:palm_cabinet"
   }
 }

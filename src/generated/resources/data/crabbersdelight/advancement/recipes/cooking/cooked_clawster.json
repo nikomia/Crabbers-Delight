@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:cooking/cooked_clawster"
+        "recipes": "crabbersdelight:cooking/cooked_clawster"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

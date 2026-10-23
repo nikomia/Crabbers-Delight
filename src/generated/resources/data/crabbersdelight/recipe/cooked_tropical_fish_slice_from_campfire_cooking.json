@@ -3,11 +3,8 @@
   "category": "food",
   "cookingtime": 600,
   "experience": 0.35,
-  "ingredient": {
-    "item": "crabbersdelight:tropical_fish_slice"
-  },
+  "ingredient": "crabbersdelight:tropical_fish_slice",
   "result": {
-    "count": 1,
     "id": "crabbersdelight:cooked_tropical_fish_slice"
   }
 }

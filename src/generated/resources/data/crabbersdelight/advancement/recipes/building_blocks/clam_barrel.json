@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:clam_barrel"
+        "recipes": "crabbersdelight:clam_barrel"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -1,28 +1,18 @@
 {
   "type": "farmersdelight:cooking",
   "container": {
-    "count": 1,
     "id": "minecraft:bowl"
   },
   "cookingtime": 400,
   "experience": 2.0,
   "ingredients": [
-    {
-      "item": "crabbersdelight:cooked_clam_meat"
-    },
-    {
-      "item": "farmersdelight:onion"
-    },
-    {
-      "item": "minecraft:potato"
-    },
-    {
-      "tag": "c:drinks/milk"
-    }
+    "crabbersdelight:cooked_clam_meat",
+    "farmersdelight:onion",
+    "minecraft:potato",
+    "#c:drinks/milk"
   ],
   "recipe_book_tab": "meals",
   "result": {
-    "count": 1,
     "id": "crabbersdelight:clam_chowder"
   }
 }

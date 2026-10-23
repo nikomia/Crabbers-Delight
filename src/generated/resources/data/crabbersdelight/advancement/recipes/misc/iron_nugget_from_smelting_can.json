@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:iron_nugget_from_smelting_can"
+        "recipes": "crabbersdelight:iron_nugget_from_smelting_can"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

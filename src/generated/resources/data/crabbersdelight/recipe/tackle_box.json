@@ -2,19 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "c": {
-      "item": "minecraft:chest"
-    },
-    "i": {
-      "item": "minecraft:iron_ingot"
-    }
+    "c": "minecraft:chest",
+    "i": "minecraft:iron_ingot"
   },
   "pattern": [
     "iii",
     "ici"
   ],
   "result": {
-    "count": 1,
     "id": "crabbersdelight:tackle_box"
   }
 }

@@ -1,13 +1,16 @@
 package alabaster.crabbersdelight.common.fishingspot;
 
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public class FishingSpotEntity extends Entity {
     private static final EntityDataAccessor<Integer> RADIUS =
@@ -33,11 +36,10 @@ public class FishingSpotEntity extends Entity {
         age++;
 
         if (random.nextFloat() < 0.16f) {
-            spawnBubbles(3 + random.nextInt(3));
+            spawnParticles(ParticleTypes.BUBBLE_POP, 3 + random.nextInt(3));
         }
-
         if (random.nextFloat() < 0.05f) {
-            spawnFishingParticles(1 + random.nextInt(2));
+            spawnParticles(ParticleTypes.FISHING, 1 + random.nextInt(2));
         }
 
         if (age >= getLifetimeTicks()) {
@@ -45,23 +47,13 @@ public class FishingSpotEntity extends Entity {
         }
     }
 
-    private void spawnBubbles(int count) {
+    private void spawnParticles(net.minecraft.core.particles.SimpleParticleType type, int count) {
         for (int i = 0; i < count; i++) {
             double angle = random.nextDouble() * Math.PI * 2;
             double dist = Math.sqrt(random.nextDouble()) * getRadius();
             double x = getX() + Math.cos(angle) * dist;
             double z = getZ() + Math.sin(angle) * dist;
-            level().addParticle(ParticleTypes.BUBBLE_POP, x, getY() + 0.1, z, 0, 0.05, 0);
-        }
-    }
-
-    private void spawnFishingParticles(int count) {
-        for (int i = 0; i < count; i++) {
-            double angle = random.nextDouble() * Math.PI * 2;
-            double dist = Math.sqrt(random.nextDouble()) * getRadius();
-            double x = getX() + Math.cos(angle) * dist;
-            double z = getZ() + Math.sin(angle) * dist;
-            level().addParticle(ParticleTypes.FISHING, x, getY() + 0.1, z, 0, 0.05, 0);
+            level().addParticle(type, x, getY() + 0.1, z, 0, 0.05, 0);
         }
     }
 
@@ -108,17 +100,22 @@ public class FishingSpotEntity extends Entity {
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag compound) {
-        this.age = compound.getInt("Age");
-        setRadius(compound.getInt("Radius"));
-        setLifetimeTicks(compound.getInt("LifetimeTicks"));
+    public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+        return false;
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag compound) {
-        compound.putInt("Age", age);
-        compound.putInt("Radius", getRadius());
-        compound.putInt("LifetimeTicks", getLifetimeTicks());
+    protected void readAdditionalSaveData(ValueInput input) {
+        this.age = input.getIntOr("Age", 0);
+        setRadius(input.getIntOr("Radius", 4));
+        setLifetimeTicks(input.getIntOr("LifetimeTicks", 2400));
+    }
+
+    @Override
+    protected void addAdditionalSaveData(ValueOutput output) {
+        output.putInt("Age", age);
+        output.putInt("Radius", getRadius());
+        output.putInt("LifetimeTicks", getLifetimeTicks());
     }
 
     @Override

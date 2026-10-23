@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:coral_crunch"
+        "recipes": "crabbersdelight:coral_crunch"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

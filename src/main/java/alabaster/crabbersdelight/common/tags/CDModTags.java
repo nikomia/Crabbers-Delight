@@ -1,6 +1,6 @@
 package alabaster.crabbersdelight.common.tags;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -32,16 +32,19 @@ public class CDModTags {
     public static final TagKey<Item> BUCKET_OF_CLAM_CHUM = modItemTag("jei_display_results/crabbersdelight/bucket_of_clam_chum");
     public static final TagKey<Item> BUCKET_OF_SHRIMP_CHUM = modItemTag("jei_display_results/crabbersdelight/bucket_of_shrimp_chum");
 
+    public static final TagKey<Item> REPAIRS_COCONUT_HELMET = modItemTag("repairs_coconut_helmet");
+    public static final TagKey<Item> REPAIRS_PEARL_NECKLACE = modItemTag("repairs_pearl_necklace");
+
     public static final TagKey<Block> CRAB_SPAWN_ON = modBlockTag("crab_spawn_on");
 
     public static final TagKey<Item> PALM_LOGS = modItemTag("palm_logs");
     public static final TagKey<Block> PALM_LOG_BLOCKS = modBlockTag("palm_log_blocks");
 
     private static TagKey<Item> modItemTag(String path) {
-        return ItemTags.create(ResourceLocation.fromNamespaceAndPath(CrabbersDelight.MODID, path));
+        return ItemTags.create(Identifier.fromNamespaceAndPath(CrabbersDelight.MODID, path));
     }
 
     private static TagKey<Block> modBlockTag(String path) {
-        return BlockTags.create(ResourceLocation.fromNamespaceAndPath(CrabbersDelight.MODID, path));
+        return BlockTags.create(Identifier.fromNamespaceAndPath(CrabbersDelight.MODID, path));
     }
 }

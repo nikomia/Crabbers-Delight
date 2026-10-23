@@ -1,5 +1,6 @@
 package alabaster.crabbersdelight.common.item;
 
+import net.minecraft.util.Prediction;
 import alabaster.crabbersdelight.common.item.component.SignedNoteContent;
 import alabaster.crabbersdelight.common.registry.CDModDataComponents;
 import alabaster.crabbersdelight.common.registry.CDModDatapackRegistries;
@@ -9,19 +10,22 @@ import alabaster.crabbersdelight.common.world.BottledNoteSavedData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.StructureTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootParams;
@@ -32,6 +36,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class MessageBottleItem extends Item {
     private static final float TREASURE_MAP_CHANCE = 0.1f;
@@ -41,20 +46,19 @@ public class MessageBottleItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("item.crabbersdelight.message_bottle.desc").withStyle(ChatFormatting.GRAY));
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
+        tooltip.accept(Component.translatable("item.crabbersdelight.message_bottle.desc").withStyle(ChatFormatting.GRAY));
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ItemStack stack = player.getItemInHand(hand);
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
         if (!player.isShiftKeyDown()) {
-            return InteractionResultHolder.pass(stack);
+            return InteractionResult.PASS;
         }
         if (level instanceof ServerLevel serverLevel) {
-            openBottle(serverLevel, player, stack);
+            openBottle(serverLevel, player, player.getItemInHand(hand));
         }
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+        return InteractionResult.SUCCESS;
     }
 
     private void openBottle(ServerLevel level, Player player, ItemStack bottleStack) {
@@ -67,7 +71,7 @@ public class MessageBottleItem extends Item {
         if (random.nextFloat() < TREASURE_MAP_CHANCE) {
             result = createTreasureMap(level, player);
         } else {
-            Registry<BottleMessageEntry> registry = level.registryAccess().registryOrThrow(CDModDatapackRegistries.BOTTLE_MESSAGE_REGISTRY_KEY);
+            Registry<BottleMessageEntry> registry = level.registryAccess().lookupOrThrow(CDModDatapackRegistries.BOTTLE_MESSAGE_REGISTRY_KEY);
             List<BottleMessageEntry> flavorEntries = registry.stream().toList();
             List<BottledNoteSavedData.Entry> playerEntries = savedData.asList();
             int totalCount = flavorEntries.size() + playerEntries.size();
@@ -93,17 +97,18 @@ public class MessageBottleItem extends Item {
         }
 
         bottleStack.shrink(1);
-        ItemStack emptyBottle = new ItemStack(Items.GLASS_BOTTLE);
-        if (!player.getInventory().add(emptyBottle)) {
-            player.drop(emptyBottle, false);
-        }
-        if (!player.getInventory().add(result)) {
-            player.drop(result, false);
-        }
-        if (!bonusItem.isEmpty() && !player.getInventory().add(bonusItem)) {
-            player.drop(bonusItem, false);
+        giveOrDrop(player, new ItemStack(Items.GLASS_BOTTLE));
+        giveOrDrop(player, result);
+        if (!bonusItem.isEmpty()) {
+            giveOrDrop(player, bonusItem);
         }
         level.playSound(null, player.blockPosition(), SoundEvents.BOTTLE_EMPTY, SoundSource.PLAYERS, 1f, 1f);
+    }
+
+    private static void giveOrDrop(Player player, ItemStack stack) {
+        if (!player.getInventory().add(stack)) {
+            player.drop(stack, false, Prediction.SERVER_ONLY);
+        }
     }
 
     private ItemStack resolveRewardItem(BottleMessageEntry message) {
@@ -111,15 +116,13 @@ public class MessageBottleItem extends Item {
         if (rewardId.isEmpty()) {
             return ItemStack.EMPTY;
         }
-        ResourceLocation loc = ResourceLocation.tryParse(rewardId.get());
-        if (loc == null) {
+        Identifier id = Identifier.tryParse(rewardId.get());
+        if (id == null) {
             return ItemStack.EMPTY;
         }
-        Item item = BuiltInRegistries.ITEM.getOptional(loc).orElse(null);
-        if (item == null) {
-            return ItemStack.EMPTY;
-        }
-        return new ItemStack(item, Math.max(1, message.rewardCount()));
+        return BuiltInRegistries.ITEM.getOptional(id)
+                .map(item -> new ItemStack(item, Math.max(1, message.rewardCount())))
+                .orElse(ItemStack.EMPTY);
     }
 
     private ItemStack signedNote(String title, String text, String author, int generation) {
@@ -129,13 +132,13 @@ public class MessageBottleItem extends Item {
     }
 
     private ItemStack createTreasureMap(ServerLevel level, Player player) {
-        ItemStack map = new ItemStack(Items.MAP);
         LootParams params = new LootParams.Builder(level)
                 .withParameter(LootContextParams.ORIGIN, player.position())
                 .withOptionalParameter(LootContextParams.THIS_ENTITY, player)
                 .create(LootContextParamSets.CHEST);
         LootContext context = new LootContext.Builder(params).create(Optional.empty());
-        LootItemFunction explorationMap = ExplorationMapFunction.makeExplorationMap().build();
-        return explorationMap.apply(map, context);
+        LootItemFunction explorationMap = ExplorationMapFunction.makeExplorationMap(
+                level.registryAccess().lookupOrThrow(Registries.STRUCTURE).getOrThrow(StructureTags.ON_TREASURE_MAPS)).build();
+        return explorationMap.apply(new ItemStack(Items.MAP), context);
     }
 }

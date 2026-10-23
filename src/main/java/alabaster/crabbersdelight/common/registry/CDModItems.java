@@ -2,327 +2,265 @@ package alabaster.crabbersdelight.common.registry;
 
 import alabaster.crabbersdelight.CrabbersDelight;
 import alabaster.crabbersdelight.common.CDFoodValues;
-import alabaster.crabbersdelight.common.entity.boat.CDBoatEntity;
 import alabaster.crabbersdelight.common.item.*;
 import alabaster.crabbersdelight.common.item.fishing.LureEffect;
+import alabaster.crabbersdelight.common.tags.CDModTags;
 import com.google.common.collect.Sets;
+import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.Consumable;
+import net.minecraft.world.item.component.Consumables;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.equipment.ArmorType;
+import net.minecraft.world.item.equipment.Equippable;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.neoforge.common.DeferredSpawnEggItem;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProvider;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProviders;
+import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import org.jspecify.annotations.Nullable;
 import vectorwing.farmersdelight.common.item.ConsumableItem;
-import vectorwing.farmersdelight.common.item.DrinkableItem;
-import vectorwing.farmersdelight.common.item.MilkBottleItem;
+import vectorwing.farmersdelight.common.item.component.consumable.RemoveRandomStatusEffectsConsumeEffect;
+import vectorwing.farmersdelight.refabricated.FDRefabricatedTags;
 
 import java.util.LinkedHashSet;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CDModItems {
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.createItems(CrabbersDelight.MODID);
-    public static LinkedHashSet<Supplier<Item>> CREATIVE_TAB_ITEMS = Sets.newLinkedHashSet();
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(CrabbersDelight.MODID);
+    public static final LinkedHashSet<Supplier<? extends Item>> CREATIVE_TAB_ITEMS = Sets.newLinkedHashSet();
 
-    public static Supplier<Item> registerWithTab(final String name, final Supplier<Item> supplier) {
-        Supplier<Item> block = ITEMS.register(name,supplier);
-        CREATIVE_TAB_ITEMS.add(block);
-        return block;
+    private static <I extends Item> DeferredItem<I> registerWithTab(String name, Function<Item.Properties, I> factory, Supplier<Item.Properties> properties) {
+        DeferredItem<I> item = ITEMS.registerItem(name, factory, properties);
+        CREATIVE_TAB_ITEMS.add(item);
+        return item;
     }
 
-    // Basic Items Helper
-    public static Item.Properties basicItem() {
-        return new Item.Properties();
+    private static <I extends Item> DeferredItem<I> registerWithTab(String name, Function<Item.Properties, I> factory) {
+        return registerWithTab(name, factory, Item.Properties::new);
     }
 
-    // Food Items Helper
+    private static DeferredItem<BlockItem> blockItem(String name, Supplier<? extends Block> block) {
+        return blockItem(name, block, Item.Properties::new);
+    }
+
+    private static DeferredItem<BlockItem> blockItem(String name, Supplier<? extends Block> block, Supplier<Item.Properties> properties) {
+        return registerWithTab(name, p -> new BlockItem(block.get(), p), () -> properties.get().useBlockDescriptionPrefix());
+    }
+
+    private static Supplier<Item.Properties> fuel(ResourceKey<ContextIntProvider> burnTime) {
+        return () -> new Item.Properties().cookingFuel(burnTime);
+    }
+
+    // Helpers mirroring Farmer's Delight
+    public static Item.Properties foodItem(FoodProperties food, @Nullable Consumable consumable) {
+        return new Item.Properties().food(food, consumable != null ? consumable : Consumables.DEFAULT_FOOD);
+    }
+
     public static Item.Properties foodItem(FoodProperties food) {
-        return new Item.Properties().food(food);
+        return foodItem(food, null);
     }
 
-    // Bowl Items Helper
-    public static Item.Properties bowlFoodItem(FoodProperties food) {
-        return new Item.Properties().food(food).craftRemainder(Items.BOWL).stacksTo(16);
+    public static Item.Properties bowlFoodItem(FoodProperties food, @Nullable Consumable consumable) {
+        return foodItem(food, consumable).craftRemainder(Items.BOWL).stacksTo(16);
     }
 
-    // Drink Items Helper
-    public static Item.Properties drinkItem(FoodProperties food) {
-        return new Item.Properties().food(food).craftRemainder(Items.GLASS_BOTTLE).stacksTo(16);
+    public static Item.Properties drinkItem(FoodProperties food, Consumable consumable) {
+        return new Item.Properties().food(food, consumable).craftRemainder(Items.GLASS_BOTTLE).stacksTo(16);
     }
 
-    // Shell Items Helper
-    public static Item.Properties shellFoodItem(FoodProperties food) {
-        return new Item.Properties().food(food).craftRemainder(Items.NAUTILUS_SHELL);
+    private static DeferredItem<ConsumableItem> food(String name, FoodProperties food) {
+        return registerWithTab(name, ConsumableItem::new, () -> foodItem(food));
     }
 
-    // Scute Items Helper
-    public static Item.Properties scuteFoodItem(FoodProperties food) {
-        return new Item.Properties().food(food).craftRemainder(Items.TURTLE_SCUTE);
+    private static DeferredItem<ConsumableItem> food(String name, FoodProperties food, Consumable consumable, boolean effectTooltip) {
+        return registerWithTab(name, p -> new ConsumableItem(p, effectTooltip), () -> foodItem(food, consumable));
+    }
+
+    private static DeferredItem<ConsumableItem> bowlFood(String name, FoodProperties food, Consumable consumable) {
+        return registerWithTab(name, p -> new ConsumableItem(p, true), () -> bowlFoodItem(food, consumable));
     }
 
     // Spawn Eggs
-    public static final Supplier<Item> CRAB_SPAWN_EGG = registerWithTab("crab_spawn_egg",
-            () -> new DeferredSpawnEggItem(CDModEntities.CRAB, 0x2f437c, 0xf48b45,
-                    new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> CRAB_SPAWN_EGG = registerWithTab("crab_spawn_egg", SpawnEggItem::new,
+            () -> new Item.Properties().spawnEgg(CDModEntities.CRAB.get()));
 
     // Mob Buckets
-    public static final Supplier<Item> CRAB_BUCKET = registerWithTab("crab_bucket",
-            () -> new MobBucketItem(
-                    CDModEntities.CRAB.get(),
-                    Fluids.WATER,
-                    SoundEvents.BUCKET_EMPTY_FISH,
-                    new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<MobBucketItem> CRAB_BUCKET = registerWithTab("crab_bucket",
+            p -> new MobBucketItem(CDModEntities.CRAB.get(), Fluids.WATER, SoundEvents.BUCKET_EMPTY_FISH, p),
+            () -> new Item.Properties().stacksTo(1).component(DataComponents.BUCKET_ENTITY_DATA, CustomData.EMPTY));
 
     // Materials
-    public static final Supplier<Item> CLAM = registerWithTab("clam",
-            () -> new Item(basicItem()));
-    public static final Supplier<Item> PEARL = registerWithTab("pearl",
-            () -> new Item(basicItem()));
-    public static final Supplier<Item> CAN = registerWithTab("can",
-            () -> new Item(basicItem()));
-    public static final Supplier<Item> CORAL_FRAGMENTS = registerWithTab("coral_fragments",
-            () -> new Item(basicItem()));
-    public static final Supplier<Item> FISH_BONES = registerWithTab("fish_bones",
-            () -> new Item(basicItem()));
+    public static final DeferredItem<Item> CLAM = registerWithTab("clam", Item::new);
+    public static final DeferredItem<Item> PEARL = registerWithTab("pearl", Item::new,
+            () -> new Item.Properties().trimMaterial(ResourceKey.create(Registries.TRIM_MATERIAL, CrabbersDelight.modPrefix("pearl"))));
+    public static final DeferredItem<Item> CAN = registerWithTab("can", Item::new);
+    public static final DeferredItem<Item> CORAL_FRAGMENTS = registerWithTab("coral_fragments", Item::new);
+    public static final DeferredItem<Item> FISH_BONES = registerWithTab("fish_bones", Item::new);
 
     // Tools & Equipment
-    public static final Supplier<Item> BUCKET_OF_CRAB_CHUM = registerWithTab("bucket_of_crab_chum",
-            () -> new ChumItem(basicItem()));
-    public static final Supplier<Item> BUCKET_OF_CLAWSTER_CHUM = registerWithTab("bucket_of_clawster_chum",
-            () -> new ChumItem(basicItem()));
-    public static final Supplier<Item> BUCKET_OF_CLAM_CHUM = registerWithTab("bucket_of_clam_chum",
-            () -> new ChumItem(basicItem()));
-    public static final Supplier<Item> BUCKET_OF_SHRIMP_CHUM = registerWithTab("bucket_of_shrimp_chum",
-            () -> new ChumItem(basicItem()));
-    public static final Supplier<Item> CRAB_CLAW = registerWithTab("crab_claw",
-            () -> new CrabClawItem(basicItem()));
-    public static final Supplier<Item> PEARL_NECKLACE = registerWithTab("pearl_necklace",
-            () -> new PearlNecklaceItem(basicItem().stacksTo(1)));
-    public static final Supplier<Item> COCONUT_HELMET = registerWithTab("coconut_helmet",
-            () -> new CoconutHelmetItem(basicItem().stacksTo(1)));
-    public static final Supplier<Item> LIFE_PRESERVER = registerWithTab("life_preserver",
-            () -> new LifePreserverItem(basicItem()));
-    public static final Supplier<Item> CONCH = registerWithTab("conch",
-            () -> new ConchItem(basicItem().stacksTo(1)));
+    public static final DeferredItem<ChumItem> BUCKET_OF_CRAB_CHUM = registerWithTab("bucket_of_crab_chum", ChumItem::new, ChumItem::properties);
+    public static final DeferredItem<ChumItem> BUCKET_OF_CLAWSTER_CHUM = registerWithTab("bucket_of_clawster_chum", ChumItem::new, ChumItem::properties);
+    public static final DeferredItem<ChumItem> BUCKET_OF_CLAM_CHUM = registerWithTab("bucket_of_clam_chum", ChumItem::new, ChumItem::properties);
+    public static final DeferredItem<ChumItem> BUCKET_OF_SHRIMP_CHUM = registerWithTab("bucket_of_shrimp_chum", ChumItem::new, ChumItem::properties);
+    public static final DeferredItem<CrabClawItem> CRAB_CLAW = registerWithTab("crab_claw", CrabClawItem::new, CrabClawItem::properties);
+    public static final DeferredItem<PearlNecklaceItem> PEARL_NECKLACE = registerWithTab("pearl_necklace", PearlNecklaceItem::new,
+            () -> new Item.Properties().humanoidArmor(CDArmorMaterials.PEARL_NECKLACE, ArmorType.CHESTPLATE).stacksTo(1));
+    public static final DeferredItem<CoconutHelmetItem> COCONUT_HELMET = registerWithTab("coconut_helmet", CoconutHelmetItem::new,
+            () -> new Item.Properties().stacksTo(1).durability(64)
+                    .repairable(CDModTags.REPAIRS_COCONUT_HELMET)
+                    .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).setEquipSound(SoundEvents.ARMOR_EQUIP_TURTLE).build())
+                    .attributes(ItemAttributeModifiers.builder()
+                            .add(Attributes.ARMOR, new AttributeModifier(CrabbersDelight.modPrefix("coconut_helmet_armor"), 3.0, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                            .build()));
+    public static final DeferredItem<LifePreserverItem> LIFE_PRESERVER = registerWithTab("life_preserver", LifePreserverItem::new,
+            () -> new Item.Properties().useBlockDescriptionPrefix()
+                    .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.LEGS).setEquipSound(SoundEvents.ARMOR_EQUIP_GENERIC).build()));
+    public static final DeferredItem<ConchItem> CONCH = registerWithTab("conch", ConchItem::new, () -> new Item.Properties().stacksTo(1));
 
     // Fishing & Crabbing
-    public static final Supplier<Item> CRAB_TRAP = registerWithTab("crab_trap",
-            () -> new CrabTrapItem(basicItem()));
-    public static final Supplier<Item> FISH_PLAQUE = registerWithTab("fish_plaque",
-            () -> new BlockItem(CDModBlocks.FISH_PLAQUE.get(), basicItem()));
-    public static final Supplier<Item> TACKLE_BOX = registerWithTab("tackle_box",
-            () -> new TackleBoxItem(basicItem().stacksTo(1)));
-    public static final Supplier<Item> BARBED_LURE = registerWithTab("barbed_lure",
-            () -> new LureItem(new Item.Properties().stacksTo(1).durability(64), LureEffect.BARBED));
-    public static final Supplier<Item> DOUBLE_LURE = registerWithTab("double_lure",
-            () -> new LureItem(new Item.Properties().stacksTo(1).durability(64), LureEffect.DOUBLE));
-    public static final Supplier<Item> MAGNETIC_LURE = registerWithTab("magnetic_lure",
-            () -> new LureItem(new Item.Properties().stacksTo(1).durability(64), LureEffect.MAGNETIC));
-    public static final Supplier<Item> AUTOMATIC_LURE = registerWithTab("automatic_lure",
-            () -> new LureItem(new Item.Properties().stacksTo(1).durability(64), LureEffect.AUTOMATIC));
-    public static final Supplier<Item> STORM_LURE = registerWithTab("storm_lure",
-            () -> new LureItem(new Item.Properties().stacksTo(1).durability(64), LureEffect.STORM));
-    public static final Supplier<Item> FISHING_LINE = registerWithTab("fishing_line",
-            () -> new FishingLineItem(new Item.Properties().stacksTo(1).durability(64)));
-    public static final Supplier<Item> WORM = registerWithTab("worm",
-            () -> new WormItem(basicItem()));
-    public static final Supplier<Item> WORMY_DIRT = registerWithTab("wormy_dirt",
-            () -> new BlockItem(CDModBlocks.WORMY_DIRT.get(), basicItem()));
-    public static final Supplier<Item> WORM_BIN = registerWithTab("worm_bin",
-            () -> new BlockItem(CDModBlocks.WORM_BIN.get(), basicItem()));
+    public static final DeferredItem<CrabTrapItem> CRAB_TRAP = registerWithTab("crab_trap", CrabTrapItem::new, () -> new Item.Properties().useBlockDescriptionPrefix());
+    public static final DeferredItem<BlockItem> FISH_PLAQUE = blockItem("fish_plaque", CDModBlocks.FISH_PLAQUE);
+    public static final DeferredItem<TackleBoxItem> TACKLE_BOX = registerWithTab("tackle_box", TackleBoxItem::new, () -> new Item.Properties().stacksTo(1).useBlockDescriptionPrefix());
+    public static final DeferredItem<LureItem> BARBED_LURE = registerWithTab("barbed_lure", p -> new LureItem(p, LureEffect.BARBED), LureItem::properties);
+    public static final DeferredItem<LureItem> DOUBLE_LURE = registerWithTab("double_lure", p -> new LureItem(p, LureEffect.DOUBLE), LureItem::properties);
+    public static final DeferredItem<LureItem> MAGNETIC_LURE = registerWithTab("magnetic_lure", p -> new LureItem(p, LureEffect.MAGNETIC), LureItem::properties);
+    public static final DeferredItem<LureItem> AUTOMATIC_LURE = registerWithTab("automatic_lure", p -> new LureItem(p, LureEffect.AUTOMATIC), LureItem::properties);
+    public static final DeferredItem<LureItem> STORM_LURE = registerWithTab("storm_lure", p -> new LureItem(p, LureEffect.STORM), LureItem::properties);
+    public static final DeferredItem<FishingLineItem> FISHING_LINE = registerWithTab("fishing_line", FishingLineItem::new, () -> new Item.Properties().stacksTo(1).durability(64));
+    public static final DeferredItem<WormItem> WORM = registerWithTab("worm", WormItem::new);
+    public static final DeferredItem<BlockItem> WORMY_DIRT = blockItem("wormy_dirt", CDModBlocks.WORMY_DIRT);
+    public static final DeferredItem<BlockItem> WORM_BIN = blockItem("worm_bin", CDModBlocks.WORM_BIN);
 
     // Palm
-    public static final Supplier<Item> PALM_LOG = registerWithTab("palm_log",
-            () -> new BlockItem(CDModBlocks.PALM_LOG.get(), basicItem()));
-    public static final Supplier<Item> PALM_WOOD = registerWithTab("palm_wood",
-            () -> new BlockItem(CDModBlocks.PALM_WOOD.get(), basicItem()));
-    public static final Supplier<Item> STRIPPED_PALM_LOG = registerWithTab("stripped_palm_log",
-            () -> new BlockItem(CDModBlocks.STRIPPED_PALM_LOG.get(), basicItem()));
-    public static final Supplier<Item> STRIPPED_PALM_WOOD = registerWithTab("stripped_palm_wood",
-            () -> new BlockItem(CDModBlocks.STRIPPED_PALM_WOOD.get(), basicItem()));
-    public static final Supplier<Item> PALM_PLANKS = registerWithTab("palm_planks",
-            () -> new BlockItem(CDModBlocks.PALM_PLANKS.get(), basicItem()));
-    public static final Supplier<Item> PALM_STAIRS = registerWithTab("palm_stairs",
-            () -> new BlockItem(CDModBlocks.PALM_STAIRS.get(), basicItem()));
-    public static final Supplier<Item> PALM_SLAB = registerWithTab("palm_slab",
-            () -> new BlockItem(CDModBlocks.PALM_SLAB.get(), basicItem()));
-    public static final Supplier<Item> PALM_FENCE = registerWithTab("palm_fence",
-            () -> new BlockItem(CDModBlocks.PALM_FENCE.get(), basicItem()));
-    public static final Supplier<Item> PALM_FENCE_GATE = registerWithTab("palm_fence_gate",
-            () -> new BlockItem(CDModBlocks.PALM_FENCE_GATE.get(), basicItem()));
-    public static final Supplier<Item> PALM_DOOR = registerWithTab("palm_door",
-            () -> new BlockItem(CDModBlocks.PALM_DOOR.get(), basicItem()));
-    public static final Supplier<Item> PALM_TRAPDOOR = registerWithTab("palm_trapdoor_bottom",
-            () -> new BlockItem(CDModBlocks.PALM_TRAPDOOR.get(), basicItem()));
-    public static final Supplier<Item> PALM_PRESSURE_PLATE = registerWithTab("palm_pressure_plate",
-            () -> new BlockItem(CDModBlocks.PALM_PRESSURE_PLATE.get(), basicItem()));
-    public static final Supplier<Item> PALM_BUTTON = registerWithTab("palm_button",
-            () -> new BlockItem(CDModBlocks.PALM_BUTTON.get(), basicItem()));
-    public static final Supplier<Item> PALM_LEAVES = registerWithTab("palm_leaves",
-            () -> new BlockItem(CDModBlocks.PALM_LEAVES.get(), basicItem()));
-    public static final Supplier<Item> PALM_SAPLING = registerWithTab("palm_sapling",
-            () -> new BlockItem(CDModBlocks.PALM_SAPLING.get(), basicItem()));
-    public static final Supplier<Item> PALM_SIGN = registerWithTab("palm_sign",
-            () -> new SignItem(new Item.Properties().stacksTo(16), CDModBlocks.PALM_SIGN.get(), CDModBlocks.PALM_WALL_SIGN.get()));
-    public static final Supplier<Item> PALM_HANGING_SIGN = registerWithTab("palm_hanging_sign",
-            () -> new HangingSignItem(CDModBlocks.PALM_HANGING_SIGN.get(), CDModBlocks.PALM_WALL_HANGING_SIGN.get(), new Item.Properties().stacksTo(16)));
-    public static final Supplier<Item> PALM_BOAT = registerWithTab("palm_boat",
-            () -> new CDBoatItem(false, CDBoatEntity.Type.PALM, new Item.Properties()));
-    public static final Supplier<Item> PALM_CHEST_BOAT = registerWithTab("palm_chest_boat",
-            () -> new CDBoatItem(true, CDBoatEntity.Type.PALM, new Item.Properties()));
-    public static final Supplier<Item> PALM_CABINET = registerWithTab("palm_cabinet",
-            () -> new BlockItem(CDModBlocks.PALM_CABINET.get(), basicItem()));
+    public static final DeferredItem<BlockItem> PALM_LOG = blockItem("palm_log", CDModBlocks.PALM_LOG, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
+    public static final DeferredItem<BlockItem> PALM_WOOD = blockItem("palm_wood", CDModBlocks.PALM_WOOD, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
+    public static final DeferredItem<BlockItem> STRIPPED_PALM_LOG = blockItem("stripped_palm_log", CDModBlocks.STRIPPED_PALM_LOG, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
+    public static final DeferredItem<BlockItem> STRIPPED_PALM_WOOD = blockItem("stripped_palm_wood", CDModBlocks.STRIPPED_PALM_WOOD, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
+    public static final DeferredItem<BlockItem> PALM_PLANKS = blockItem("palm_planks", CDModBlocks.PALM_PLANKS, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
+    public static final DeferredItem<BlockItem> PALM_STAIRS = blockItem("palm_stairs", CDModBlocks.PALM_STAIRS, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
+    public static final DeferredItem<BlockItem> PALM_SLAB = blockItem("palm_slab", CDModBlocks.PALM_SLAB, fuel(ContextIntProviders.COOKING_TIME_WOOD_SLABS));
+    public static final DeferredItem<BlockItem> PALM_FENCE = blockItem("palm_fence", CDModBlocks.PALM_FENCE, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
+    public static final DeferredItem<BlockItem> PALM_FENCE_GATE = blockItem("palm_fence_gate", CDModBlocks.PALM_FENCE_GATE, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
+    public static final DeferredItem<DoubleHighBlockItem> PALM_DOOR = registerWithTab("palm_door", p -> new DoubleHighBlockItem(CDModBlocks.PALM_DOOR.get(), p),
+            () -> new Item.Properties().cookingFuel(ContextIntProviders.COOKING_TIME_WOOD_ITEMS_LARGE).useBlockDescriptionPrefix());
+    // Item id kept from the original mod even though the block is "palm_trapdoor"
+    public static final DeferredItem<BlockItem> PALM_TRAPDOOR = blockItem("palm_trapdoor_bottom", CDModBlocks.PALM_TRAPDOOR, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
+    public static final DeferredItem<BlockItem> PALM_PRESSURE_PLATE = blockItem("palm_pressure_plate", CDModBlocks.PALM_PRESSURE_PLATE, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
+    public static final DeferredItem<BlockItem> PALM_BUTTON = blockItem("palm_button", CDModBlocks.PALM_BUTTON, fuel(ContextIntProviders.COOKING_TIME_WOOD_ITEMS_EXTRA_SMALL));
+    public static final DeferredItem<BlockItem> PALM_LEAVES = blockItem("palm_leaves", CDModBlocks.PALM_LEAVES,
+            () -> new Item.Properties().compostable(ContextIntProviders.COMPOSTABLE_LOW));
+    public static final DeferredItem<BlockItem> PALM_SAPLING = blockItem("palm_sapling", CDModBlocks.PALM_SAPLING,
+            () -> new Item.Properties().compostable(ContextIntProviders.COMPOSTABLE_LOW).cookingFuel(ContextIntProviders.COOKING_TIME_DRY_PLANTS));
+    public static final DeferredItem<StandingAndWallBlockItem> PALM_SIGN = registerWithTab("palm_sign",
+            p -> new StandingAndWallBlockItem(CDModBlocks.PALM_SIGN.get(), CDModBlocks.PALM_WALL_SIGN.get(), Direction.DOWN, p),
+            () -> new Item.Properties().cookingFuel(ContextIntProviders.COOKING_TIME_WOOD_ITEMS_LARGE).stacksTo(16).signText().useBlockDescriptionPrefix());
+    public static final DeferredItem<HangingSignItem> PALM_HANGING_SIGN = registerWithTab("palm_hanging_sign",
+            p -> new HangingSignItem(CDModBlocks.PALM_HANGING_SIGN.get(), CDModBlocks.PALM_WALL_HANGING_SIGN.get(), p),
+            () -> new Item.Properties().cookingFuel(ContextIntProviders.COOKING_TIME_HANGING_SIGNS).stacksTo(16).signText().useBlockDescriptionPrefix());
+    public static final DeferredItem<BoatItem> PALM_BOAT = registerWithTab("palm_boat", p -> new BoatItem(CDModEntities.PALM_BOAT.get(), p),
+            () -> new Item.Properties().cookingFuel(ContextIntProviders.COOKING_TIME_BOATS).stacksTo(1));
+    public static final DeferredItem<BoatItem> PALM_CHEST_BOAT = registerWithTab("palm_chest_boat", p -> new BoatItem(CDModEntities.PALM_CHEST_BOAT.get(), p),
+            () -> new Item.Properties().cookingFuel(ContextIntProviders.COOKING_TIME_BOATS).stacksTo(1));
+    public static final DeferredItem<BlockItem> PALM_CABINET = blockItem("palm_cabinet", CDModBlocks.PALM_CABINET, fuel(ContextIntProviders.COOKING_TIME_WOOD_BLOCKS));
 
     // Coconut
-    public static final Supplier<Item> COCONUT = registerWithTab("coconut",
-            () -> new BlockItem(CDModBlocks.COCONUT.get(), basicItem()));
-    public static final Supplier<Item> COCONUT_HALVE = registerWithTab("coconut_halve",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COCONUT_HALVE)));
-    public static final Supplier<Item> COCONUT_MILK = registerWithTab("coconut_milk",
-            () -> new MilkBottleItem(drinkItem(CDFoodValues.COCONUT_MILK)));
-    public static final Supplier<Item> COCONUT_PUDDING = registerWithTab("coconut_pudding",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COCONUT_PUDDING).craftRemainder(Items.GLASS_BOTTLE)));
+    public static final DeferredItem<BlockItem> COCONUT = blockItem("coconut", CDModBlocks.COCONUT);
+    public static final DeferredItem<ConsumableItem> COCONUT_HALVE = food("coconut_halve", CDFoodValues.COCONUT_HALVE);
+    public static final DeferredItem<ConsumableItem> COCONUT_MILK = registerWithTab("coconut_milk", p -> new ConsumableItem(p, false, true),
+            () -> drinkItem(CDFoodValues.COCONUT_MILK, Consumables.defaultDrink()
+                    .onConsume(new RemoveRandomStatusEffectsConsumeEffect(FDRefabricatedTags.MobEffects.MILK_BOTTLE_IGNORED)).build()));
+    public static final DeferredItem<ConsumableItem> COCONUT_PUDDING = registerWithTab("coconut_pudding", ConsumableItem::new,
+            () -> foodItem(CDFoodValues.COCONUT_PUDDING).craftRemainder(Items.GLASS_BOTTLE));
 
     // Seashells
-    public static final Supplier<Item> SEASHELLS = registerWithTab("seashells",
-            () -> new BlockItem(CDModBlocks.SEASHELLS.get(), basicItem()));
+    public static final DeferredItem<BlockItem> SEASHELLS = blockItem("seashells", CDModBlocks.SEASHELLS);
 
     // Raw / Cooked Meats
-    public static final Supplier<Item> RAW_CRAB = registerWithTab("crab",
-            () -> new ConsumableItem(foodItem(CDFoodValues.RAW_CRAB)));
-    public static final Supplier<Item> COOKED_CRAB = registerWithTab("cooked_crab",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COOKED_CRAB)));
-
-    public static final Supplier<Item> RAW_CLAWSTER = registerWithTab("clawster",
-            () -> new ConsumableItem(foodItem(CDFoodValues.RAW_CLAWSTER)));
-    public static final Supplier<Item> COOKED_CLAWSTER = registerWithTab("cooked_clawster",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COOKED_CLAWSTER)));
-
-    public static final Supplier<Item> RAW_SHRIMP = registerWithTab("shrimp",
-            () -> new ConsumableItem(foodItem(CDFoodValues.RAW_SHRIMP), true));
-    public static final Supplier<Item> COOKED_SHRIMP = registerWithTab("cooked_shrimp",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COOKED_SHRIMP)));
-
-    public static final Supplier<Item> RAW_CLAM_MEAT = registerWithTab("raw_clam_meat",
-            () -> new ConsumableItem(foodItem(CDFoodValues.RAW_CLAM_MEAT)));
-    public static final Supplier<Item> COOKED_CLAM_MEAT = registerWithTab("cooked_clam_meat",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COOKED_CLAM_MEAT)));
-
-    public static final Supplier<Item> RAW_SQUID_TENTACLES = registerWithTab("raw_squid_tentacles",
-            () -> new ConsumableItem(foodItem(CDFoodValues.RAW_SQUID_TENTACLES)));
-    public static final Supplier<Item> RAW_GLOW_SQUID_TENTACLES = registerWithTab("raw_glow_squid_tentacles",
-            () -> new ConsumableItem(foodItem(CDFoodValues.RAW_SQUID_TENTACLES)));
-    public static final Supplier<Item> COOKED_SQUID_TENTACLES = registerWithTab("cooked_squid_tentacles",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COOKED_SQUID_TENTACLES)));
-    public static final Supplier<Item> COOKED_GLOW_SQUID_TENTACLES = registerWithTab("cooked_glow_squid_tentacles",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COOKED_SQUID_TENTACLES)));
-
-    public static final Supplier<Item> RAW_FROG_LEG = registerWithTab("raw_frog_leg",
-            () -> new ConsumableItem(foodItem(CDFoodValues.RAW_FROG_LEG)));
-    public static final Supplier<Item> COOKED_FROG_LEG = registerWithTab("cooked_frog_leg",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COOKED_FROG_LEG)));
-
-    public static final Supplier<Item> FRIED_FISH = registerWithTab("fried_fish",
-            () -> new ConsumableItem(foodItem(CDFoodValues.FRIED_FISH)));
-    public static final Supplier<Item> FISH_SANDWICH = registerWithTab("fish_sandwich",
-            () -> new ConsumableItem(foodItem(CDFoodValues.FISH_SANDWICH)));
+    public static final DeferredItem<ConsumableItem> RAW_CRAB = food("crab", CDFoodValues.RAW_CRAB);
+    public static final DeferredItem<ConsumableItem> COOKED_CRAB = food("cooked_crab", CDFoodValues.COOKED_CRAB);
+    public static final DeferredItem<ConsumableItem> RAW_CLAWSTER = food("clawster", CDFoodValues.RAW_CLAWSTER);
+    public static final DeferredItem<ConsumableItem> COOKED_CLAWSTER = food("cooked_clawster", CDFoodValues.COOKED_CLAWSTER);
+    public static final DeferredItem<ConsumableItem> RAW_SHRIMP = food("shrimp", CDFoodValues.RAW_SHRIMP, CDFoodValues.RAW_SHRIMP_CONSUMABLE, true);
+    public static final DeferredItem<ConsumableItem> COOKED_SHRIMP = food("cooked_shrimp", CDFoodValues.COOKED_SHRIMP, CDFoodValues.FAST_FOOD, true);
+    public static final DeferredItem<ConsumableItem> RAW_CLAM_MEAT = food("raw_clam_meat", CDFoodValues.RAW_CLAM_MEAT, CDFoodValues.FAST_FOOD, true);
+    public static final DeferredItem<ConsumableItem> COOKED_CLAM_MEAT = food("cooked_clam_meat", CDFoodValues.COOKED_CLAM_MEAT, CDFoodValues.FAST_FOOD, true);
+    public static final DeferredItem<ConsumableItem> RAW_SQUID_TENTACLES = food("raw_squid_tentacles", CDFoodValues.RAW_SQUID_TENTACLES);
+    public static final DeferredItem<ConsumableItem> RAW_GLOW_SQUID_TENTACLES = food("raw_glow_squid_tentacles", CDFoodValues.RAW_SQUID_TENTACLES);
+    public static final DeferredItem<ConsumableItem> COOKED_SQUID_TENTACLES = food("cooked_squid_tentacles", CDFoodValues.COOKED_SQUID_TENTACLES);
+    public static final DeferredItem<ConsumableItem> COOKED_GLOW_SQUID_TENTACLES = food("cooked_glow_squid_tentacles", CDFoodValues.COOKED_SQUID_TENTACLES);
+    public static final DeferredItem<ConsumableItem> RAW_FROG_LEG = food("raw_frog_leg", CDFoodValues.RAW_FROG_LEG);
+    public static final DeferredItem<ConsumableItem> COOKED_FROG_LEG = food("cooked_frog_leg", CDFoodValues.COOKED_FROG_LEG);
+    public static final DeferredItem<ConsumableItem> FRIED_FISH = food("fried_fish", CDFoodValues.FRIED_FISH);
+    public static final DeferredItem<ConsumableItem> FISH_SANDWICH = food("fish_sandwich", CDFoodValues.FISH_SANDWICH);
 
     // Meals
-    public static final Supplier<Item> CRAB_CAKES = registerWithTab("crab_cakes",
-            () -> new ConsumableItem(foodItem(CDFoodValues.CRAB_CAKES), true));
-    public static final Supplier<Item> CRAB_LEGS = registerWithTab("crab_legs",
-            () -> new ConsumableItem(foodItem(CDFoodValues.CRAB_LEGS)));
-    public static final Supplier<Item> FISH_STICK = registerWithTab("fish_stick",
-            () -> new ConsumableItem(foodItem(CDFoodValues.FISH_STICK)));
-    public static final Supplier<Item> SURF_AND_TURF = registerWithTab("surf_and_turf",
-            () -> new ConsumableItem(foodItem(CDFoodValues.SURF_AND_TURF), true));
-    public static final Supplier<Item> SHRIMP_SKEWER = registerWithTab("shrimp_skewer",
-            () -> new ConsumableItem(foodItem(CDFoodValues.SHRIMP_SKEWER)));
-    public static final Supplier<Item> CLAM_BAKE = registerWithTab("clam_bake",
-            () -> new ConsumableItem(foodItem(CDFoodValues.CLAM_BAKE), true));
-    public static final Supplier<Item> COOKED_TROPICAL_FISH = registerWithTab("cooked_tropical_fish",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COOKED_TROPICAL_FISH)));
+    public static final DeferredItem<ConsumableItem> CRAB_CAKES = food("crab_cakes", CDFoodValues.CRAB_CAKES, CDFoodValues.CRAB_CAKES_CONSUMABLE, true);
+    public static final DeferredItem<ConsumableItem> CRAB_LEGS = food("crab_legs", CDFoodValues.CRAB_LEGS);
+    public static final DeferredItem<ConsumableItem> FISH_STICK = food("fish_stick", CDFoodValues.FISH_STICK);
+    public static final DeferredItem<ConsumableItem> SURF_AND_TURF = food("surf_and_turf", CDFoodValues.SURF_AND_TURF, CDFoodValues.SURF_AND_TURF_CONSUMABLE, true);
+    public static final DeferredItem<ConsumableItem> SHRIMP_SKEWER = food("shrimp_skewer", CDFoodValues.SHRIMP_SKEWER);
+    public static final DeferredItem<ConsumableItem> CLAM_BAKE = food("clam_bake", CDFoodValues.CLAM_BAKE, CDFoodValues.CLAM_BAKE_CONSUMABLE, true);
+    public static final DeferredItem<ConsumableItem> COOKED_TROPICAL_FISH = food("cooked_tropical_fish", CDFoodValues.COOKED_TROPICAL_FISH, CDFoodValues.FAST_FOOD, true);
+    public static final DeferredItem<ConsumableItem> PUFFERFISH_SLICE = food("pufferfish_slice", CDFoodValues.PUFFERFISH_SLICE, CDFoodValues.PUFFERFISH_SLICE_CONSUMABLE, true);
+    public static final DeferredItem<ConsumableItem> COOKED_PUFFERFISH_SLICE = food("cooked_pufferfish_slice", CDFoodValues.COOKED_PUFFERFISH_SLICE, CDFoodValues.FAST_FOOD, true);
+    public static final DeferredItem<ConsumableItem> TROPICAL_FISH_SLICE = food("tropical_fish_slice", CDFoodValues.TROPICAL_FISH_SLICE, CDFoodValues.FAST_FOOD, true);
+    public static final DeferredItem<ConsumableItem> COOKED_TROPICAL_FISH_SLICE = food("cooked_tropical_fish_slice", CDFoodValues.COOKED_TROPICAL_FISH_SLICE, CDFoodValues.FAST_FOOD, true);
+    public static final DeferredItem<ConsumableItem> STUFFED_NAUTILUS_SHELL = registerWithTab("stuffed_nautilus_shell", p -> new ConsumableItem(p, true),
+            () -> foodItem(CDFoodValues.STUFFED_NAUTILUS_SHELL, CDFoodValues.STUFFED_NAUTILUS_SHELL_CONSUMABLE).craftRemainder(Items.NAUTILUS_SHELL));
+    public static final DeferredItem<ConsumableItem> SQUID_KEBAB = food("squid_kebab", CDFoodValues.SQUID_KEBAB);
+    public static final DeferredItem<ConsumableItem> FROG_LEG_KEBAB = food("frog_leg_kebab", CDFoodValues.FROG_LEG_KEBAB);
+    public static final DeferredItem<ConsumableItem> JAR_OF_PICKLES = registerWithTab("jar_of_pickles", ConsumableItem::new,
+            () -> foodItem(CDFoodValues.JAR_OF_PICKLES).craftRemainder(Items.GLASS_BOTTLE));
 
-    public static final Supplier<Item> PUFFERFISH_SLICE = registerWithTab("pufferfish_slice",
-            () -> new ConsumableItem(foodItem(CDFoodValues.PUFFERFISH_SLICE), true));
-    public static final Supplier<Item> COOKED_PUFFERFISH_SLICE = registerWithTab("cooked_pufferfish_slice",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COOKED_PUFFERFISH_SLICE)));
+    // Drinks
+    public static final DeferredItem<ConsumableItem> KELP_SHAKE = registerWithTab("kelp_shake", p -> new ConsumableItem(p, true),
+            () -> drinkItem(CDFoodValues.KELP_SHAKE, CDFoodValues.KELP_SHAKE_CONSUMABLE));
+    public static final DeferredItem<ConsumableItem> SEA_PICKLE_JUICE = registerWithTab("sea_pickle_juice", p -> new ConsumableItem(p, true),
+            () -> drinkItem(CDFoodValues.SEA_PICKLE_JUICE, CDFoodValues.SEA_PICKLE_JUICE_CONSUMABLE));
 
-    public static final Supplier<Item> TROPICAL_FISH_SLICE = registerWithTab("tropical_fish_slice",
-            () -> new ConsumableItem(foodItem(CDFoodValues.TROPICAL_FISH_SLICE)));
-    public static final Supplier<Item> COOKED_TROPICAL_FISH_SLICE = registerWithTab("cooked_tropical_fish_slice",
-            () -> new ConsumableItem(foodItem(CDFoodValues.COOKED_TROPICAL_FISH_SLICE)));
-
-    public static final Supplier<Item> STUFFED_NAUTILUS_SHELL = registerWithTab("stuffed_nautilus_shell",
-            () -> new ConsumableItem(shellFoodItem(CDFoodValues.STUFFED_NAUTILUS_SHELL), true));
-    public static final Supplier<Item> SQUID_KEBAB = registerWithTab("squid_kebab",
-            () -> new ConsumableItem(foodItem(CDFoodValues.SQUID_KEBAB)));
-    public static final Supplier<Item> FROG_LEG_KEBAB = registerWithTab("frog_leg_kebab",
-            () -> new ConsumableItem(foodItem(CDFoodValues.FROG_LEG_KEBAB)));
-    public static final Supplier<Item> JAR_OF_PICKLES = registerWithTab("jar_of_pickles",
-            () -> new ConsumableItem(foodItem(CDFoodValues.JAR_OF_PICKLES).craftRemainder(Items.GLASS_BOTTLE)));
-
-    // Drink Food Items
-    public static final Supplier<Item> KELP_SHAKE = registerWithTab("kelp_shake",
-            () -> new DrinkableItem(drinkItem(CDFoodValues.KELP_SHAKE), true));
-    public static final Supplier<Item> SEA_PICKLE_JUICE = registerWithTab("sea_pickle_juice",
-            () -> new DrinkableItem(drinkItem(CDFoodValues.SEA_PICKLE_JUICE), true));
-
-    // Bowl Food Items
-    public static final Supplier<Item> BISQUE = registerWithTab("bisque",
-            () -> new ConsumableItem(bowlFoodItem(CDFoodValues.BISQUE), true));
-    public static final Supplier<Item> SEAFOOD_GUMBO = registerWithTab("seafood_gumbo",
-            () -> new ConsumableItem(bowlFoodItem(CDFoodValues.SEAFOOD_GUMBO), true));
-    public static final Supplier<Item> CLAM_CHOWDER = registerWithTab("clam_chowder",
-            () -> new ConsumableItem(bowlFoodItem(CDFoodValues.CLAM_CHOWDER), true));
-    public static final Supplier<Item> SHRIMP_FRIED_RICE = registerWithTab("shrimp_fried_rice",
-            () -> new ConsumableItem(bowlFoodItem(CDFoodValues.SHRIMP_FRIED_RICE), true));
-    public static final Supplier<Item> CORAL_CRUNCH = registerWithTab("coral_crunch",
-            () -> new ConsumableItem(bowlFoodItem(CDFoodValues.CORAL_CRUNCH), true));
-    public static final Supplier<Item> TURTLE_STEW = registerWithTab("turtle_stew",
-            () -> new ConsumableItem(scuteFoodItem(CDFoodValues.TURTLE_STEW), true));
+    // Bowl Foods
+    public static final DeferredItem<ConsumableItem> BISQUE = bowlFood("bisque", CDFoodValues.BISQUE, CDFoodValues.BISQUE_CONSUMABLE);
+    public static final DeferredItem<ConsumableItem> SEAFOOD_GUMBO = bowlFood("seafood_gumbo", CDFoodValues.SEAFOOD_GUMBO, CDFoodValues.SEAFOOD_GUMBO_CONSUMABLE);
+    public static final DeferredItem<ConsumableItem> CLAM_CHOWDER = bowlFood("clam_chowder", CDFoodValues.CLAM_CHOWDER, CDFoodValues.CLAM_CHOWDER_CONSUMABLE);
+    public static final DeferredItem<ConsumableItem> SHRIMP_FRIED_RICE = bowlFood("shrimp_fried_rice", CDFoodValues.SHRIMP_FRIED_RICE, CDFoodValues.SHRIMP_FRIED_RICE_CONSUMABLE);
+    public static final DeferredItem<ConsumableItem> CORAL_CRUNCH = bowlFood("coral_crunch", CDFoodValues.CORAL_CRUNCH, CDFoodValues.CORAL_CRUNCH_CONSUMABLE);
+    public static final DeferredItem<ConsumableItem> TURTLE_STEW = registerWithTab("turtle_stew", p -> new ConsumableItem(p, true),
+            () -> foodItem(CDFoodValues.TURTLE_STEW, CDFoodValues.TURTLE_STEW_CONSUMABLE).craftRemainder(Items.TURTLE_SCUTE));
 
     // Storage Blocks
-    public static final Supplier<Item> CRAB_BARREL = registerWithTab("crab_barrel",
-            () -> new BlockItem(CDModBlocks.CRAB_BARREL.get(), basicItem()));
-    public static final Supplier<Item> CLAM_BARREL = registerWithTab("clam_barrel",
-            () -> new BlockItem(CDModBlocks.CLAM_BARREL.get(), basicItem()));
-    public static final Supplier<Item> CLAWSTER_BARREL = registerWithTab("clawster_barrel",
-            () -> new BlockItem(CDModBlocks.CLAWSTER_BARREL.get(), basicItem()));
-    public static final Supplier<Item> SHRIMP_BARREL = registerWithTab("shrimp_barrel",
-            () -> new BlockItem(CDModBlocks.SHRIMP_BARREL.get(), basicItem()));
-    public static final Supplier<Item> COD_BARREL = registerWithTab("cod_barrel",
-            () -> new BlockItem(CDModBlocks.COD_BARREL.get(), basicItem()));
-    public static final Supplier<Item> SALMON_BARREL = registerWithTab("salmon_barrel",
-            () -> new BlockItem(CDModBlocks.SALMON_BARREL.get(), basicItem()));
-    public static final Supplier<Item> PUFFERFISH_BARREL = registerWithTab("pufferfish_barrel",
-            () -> new BlockItem(CDModBlocks.PUFFERFISH_BARREL.get(), basicItem()));
-    public static final Supplier<Item> TROPICAL_FISH_BARREL = registerWithTab("tropical_fish_barrel",
-            () -> new BlockItem(CDModBlocks.TROPICAL_FISH_BARREL.get(), basicItem()));
-    public static final Supplier<Item> SQUID_BARREL = registerWithTab("squid_barrel",
-            () -> new BlockItem(CDModBlocks.SQUID_BARREL.get(), basicItem()));
-    public static final Supplier<Item> GLOW_SQUID_BARREL = registerWithTab("glow_squid_barrel",
-            () -> new BlockItem(CDModBlocks.GLOW_SQUID_BARREL.get(), basicItem()));
-    public static final Supplier<Item> FROG_LEG_BARREL = registerWithTab("frog_leg_barrel",
-            () -> new BlockItem(CDModBlocks.FROG_LEG_BARREL.get(), basicItem()));
-    public static final Supplier<Item> COCONUT_CRATE = registerWithTab("coconut_crate",
-            () -> new BlockItem(CDModBlocks.COCONUT_CRATE.get(), basicItem()));
-    public static final Supplier<Item> NAUTILUS_SHELL_BLOCK = registerWithTab("nautilus_shell_block",
-            () -> new BlockItem(CDModBlocks.NAUTILUS_SHELL_BLOCK.get(), basicItem()));
-    public static final Supplier<Item> PEARL_BLOCK = registerWithTab("pearl_block",
-            () -> new BlockItem(CDModBlocks.PEARL_BLOCK.get(), basicItem()));
-    public static final Supplier<Item> SCUTE_BLOCK = registerWithTab("scute_block",
-            () -> new BlockItem(CDModBlocks.SCUTE_BLOCK.get(), basicItem()));
-    public static final Supplier<Item> SEA_PICKLE_CRATE = registerWithTab("sea_pickle_crate",
-            () -> new BlockItem(CDModBlocks.SEA_PICKLE_CRATE.get(), basicItem()));
+    public static final DeferredItem<BlockItem> CRAB_BARREL = blockItem("crab_barrel", CDModBlocks.CRAB_BARREL);
+    public static final DeferredItem<BlockItem> CLAM_BARREL = blockItem("clam_barrel", CDModBlocks.CLAM_BARREL);
+    public static final DeferredItem<BlockItem> CLAWSTER_BARREL = blockItem("clawster_barrel", CDModBlocks.CLAWSTER_BARREL);
+    public static final DeferredItem<BlockItem> SHRIMP_BARREL = blockItem("shrimp_barrel", CDModBlocks.SHRIMP_BARREL);
+    public static final DeferredItem<BlockItem> COD_BARREL = blockItem("cod_barrel", CDModBlocks.COD_BARREL);
+    public static final DeferredItem<BlockItem> SALMON_BARREL = blockItem("salmon_barrel", CDModBlocks.SALMON_BARREL);
+    public static final DeferredItem<BlockItem> PUFFERFISH_BARREL = blockItem("pufferfish_barrel", CDModBlocks.PUFFERFISH_BARREL);
+    public static final DeferredItem<BlockItem> TROPICAL_FISH_BARREL = blockItem("tropical_fish_barrel", CDModBlocks.TROPICAL_FISH_BARREL);
+    public static final DeferredItem<BlockItem> SQUID_BARREL = blockItem("squid_barrel", CDModBlocks.SQUID_BARREL);
+    public static final DeferredItem<BlockItem> GLOW_SQUID_BARREL = blockItem("glow_squid_barrel", CDModBlocks.GLOW_SQUID_BARREL);
+    public static final DeferredItem<BlockItem> FROG_LEG_BARREL = blockItem("frog_leg_barrel", CDModBlocks.FROG_LEG_BARREL);
+    public static final DeferredItem<BlockItem> COCONUT_CRATE = blockItem("coconut_crate", CDModBlocks.COCONUT_CRATE);
+    public static final DeferredItem<BlockItem> NAUTILUS_SHELL_BLOCK = blockItem("nautilus_shell_block", CDModBlocks.NAUTILUS_SHELL_BLOCK);
+    public static final DeferredItem<BlockItem> PEARL_BLOCK = blockItem("pearl_block", CDModBlocks.PEARL_BLOCK);
+    public static final DeferredItem<BlockItem> SCUTE_BLOCK = blockItem("scute_block", CDModBlocks.SCUTE_BLOCK);
+    public static final DeferredItem<BlockItem> SEA_PICKLE_CRATE = blockItem("sea_pickle_crate", CDModBlocks.SEA_PICKLE_CRATE);
 
     // Notes + Messages in a Bottle
-    public static final Supplier<Item> NOTE = registerWithTab("note",
-            () -> new NoteItem(basicItem().stacksTo(16)));
-    public static final Supplier<Item> SIGNED_NOTE = registerWithTab("signed_note",
-            () -> new SignedNoteItem(basicItem().stacksTo(16)));
-    public static final Supplier<Item> MESSAGE_BOTTLE = registerWithTab("message_bottle",
-            () -> new MessageBottleItem(basicItem()));
-    public static final Supplier<Item> BOTTLED_NOTE = registerWithTab("bottled_note",
-            () -> new BottledNoteItem(basicItem().stacksTo(16)));
-
+    public static final DeferredItem<NoteItem> NOTE = registerWithTab("note", NoteItem::new, () -> new Item.Properties().stacksTo(16));
+    public static final DeferredItem<SignedNoteItem> SIGNED_NOTE = registerWithTab("signed_note", SignedNoteItem::new, () -> new Item.Properties().stacksTo(16));
+    public static final DeferredItem<MessageBottleItem> MESSAGE_BOTTLE = registerWithTab("message_bottle", MessageBottleItem::new);
+    public static final DeferredItem<BottledNoteItem> BOTTLED_NOTE = registerWithTab("bottled_note", BottledNoteItem::new, () -> new Item.Properties().stacksTo(16));
 }

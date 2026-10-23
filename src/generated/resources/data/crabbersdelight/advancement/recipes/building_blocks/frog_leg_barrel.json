@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:frog_leg_barrel"
+        "recipes": "crabbersdelight:frog_leg_barrel"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

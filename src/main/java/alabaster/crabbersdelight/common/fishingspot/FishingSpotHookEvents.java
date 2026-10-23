@@ -4,7 +4,7 @@ import alabaster.crabbersdelight.CrabbersDelight;
 import alabaster.crabbersdelight.common.Config;
 import alabaster.crabbersdelight.common.utils.FishingHookReflection;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -18,11 +18,11 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import java.util.HashSet;
 import java.util.Set;
 
-@EventBusSubscriber(modid = CrabbersDelight.MODID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = CrabbersDelight.MODID)
 public class FishingSpotHookEvents {
-    private static final ResourceLocation FISHING_SPOT_LUCK = CrabbersDelight.modPrefix("fishing_spot_luck");
+    private static final Identifier FISHING_SPOT_LUCK = CrabbersDelight.modPrefix("fishing_spot_luck");
     private static final double FISHING_SPOT_LUCK_BONUS = 6.0;
-    private static final ResourceLocation OUTSIDE_SPOT_LUCK_PENALTY = CrabbersDelight.modPrefix("outside_fishing_spot_luck_penalty");
+    private static final Identifier OUTSIDE_SPOT_LUCK_PENALTY = CrabbersDelight.modPrefix("outside_fishing_spot_luck_penalty");
     private static final int MAX_LURE_TICKS = 60;
     private static final int TWINKLE_COUNT = 8;
     private static final double TWINKLE_HEIGHT_OFFSET = 0.5;
@@ -33,7 +33,7 @@ public class FishingSpotHookEvents {
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         Player player = event.getEntity();
-        if (player.level().isClientSide) {
+        if (player.level().isClientSide()) {
             return;
         }
 

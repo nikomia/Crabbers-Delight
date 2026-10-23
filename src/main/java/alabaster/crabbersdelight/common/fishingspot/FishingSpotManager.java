@@ -7,10 +7,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.AbstractFish;
+import net.minecraft.world.entity.animal.fish.AbstractFish;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -24,7 +25,7 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 import java.util.List;
 
-@EventBusSubscriber(modid = CrabbersDelight.MODID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = CrabbersDelight.MODID)
 public class FishingSpotManager {
     private static final int SPAWN_SEARCH_RADIUS = 32;
     private static final int CANDIDATE_COUNT = 5;
@@ -109,11 +110,11 @@ public class FishingSpotManager {
         int radius = Math.min(2 + bestPoints / 4, 5);
         int lifespanTicks = 2400 + bestPoints * 400;
 
-        FishingSpotEntity spot = CDModEntities.FISHING_SPOT.get().create(level);
+        FishingSpotEntity spot = CDModEntities.FISHING_SPOT.get().create(level, EntitySpawnReason.EVENT);
         if (spot == null) {
             return;
         }
-        spot.moveTo(bestSurfacePos.getX() + 0.5, bestSurfacePos.getY() + 1, bestSurfacePos.getZ() + 0.5, 0f, 0f);
+        spot.snapTo(bestSurfacePos.getX() + 0.5, bestSurfacePos.getY() + 1, bestSurfacePos.getZ() + 0.5, 0f, 0f);
         spot.setRadius(radius);
         spot.setLifetimeTicks(lifespanTicks);
         level.addFreshEntity(spot);
@@ -126,7 +127,7 @@ public class FishingSpotManager {
 
     public static BlockPos findWaterSurface(ServerLevel level, int x, int z) {
         int topY = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
-        for (int y = topY; y > level.getMinBuildHeight(); y--) {
+        for (int y = topY; y > level.getMinY(); y--) {
             BlockPos pos = new BlockPos(x, y, z);
             FluidState fluid = level.getFluidState(pos);
             FluidState fluidAbove = level.getFluidState(pos.above());
@@ -193,7 +194,7 @@ public class FishingSpotManager {
                 );
                 List<Entity> nearby = level.getEntitiesOfClass(Entity.class, box, entity -> true);
                 for (Entity entity : nearby) {
-                    if (entity instanceof Boat) {
+                    if (entity instanceof AbstractBoat) {
                         spot.disturb();
                         break;
                     }

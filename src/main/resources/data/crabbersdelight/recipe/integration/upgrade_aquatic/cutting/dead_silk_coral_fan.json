@@ -7,9 +7,7 @@
   ],
   "type": "farmersdelight:cutting",
   "ingredients": [
-    {
-      "item": "upgrade_aquatic:dead_silk_coral_fan"
-    }
+    "upgrade_aquatic:dead_silk_coral_fan"
   ],
   "result": [
     {
@@ -20,7 +18,7 @@
     }
   ],
   "tool": {
-    "type": "farmersdelight:item_ability",
+    "neoforge:ingredient_type": "farmersdelight:item_ability",
     "action": "pickaxe_dig"
   }
 }

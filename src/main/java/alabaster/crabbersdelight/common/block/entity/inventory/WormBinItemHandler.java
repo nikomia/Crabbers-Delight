@@ -2,8 +2,7 @@ package alabaster.crabbersdelight.common.block.entity.inventory;
 
 import alabaster.crabbersdelight.common.block.entity.WormBinBlockEntity;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import org.jetbrains.annotations.NotNull;
+import vectorwing.farmersdelight.refabricated.inventory.ItemStackHandler;
 
 public class WormBinItemHandler extends ItemStackHandler {
     public static final int FUEL_SLOT = 0;
@@ -14,7 +13,7 @@ public class WormBinItemHandler extends ItemStackHandler {
     }
 
     @Override
-    public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+    public boolean isItemValid(int slot, ItemStack stack) {
         if (slot == FUEL_SLOT) {
             return WormBinBlockEntity.isValidFuel(stack);
         }

@@ -8,12 +8,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "c": {
-      "item": "crabbersdelight:coral_fragments"
-    },
-    "d": {
-      "item": "minecraft:white_dye"
-    }
+    "c": "crabbersdelight:coral_fragments",
+    "d": "minecraft:white_dye"
   },
   "pattern": [
     "   ",
@@ -21,7 +17,6 @@
     "   "
   ],
   "result": {
-    "count": 1,
     "id": "upgrade_aquatic:pillow_coral"
   }
 }

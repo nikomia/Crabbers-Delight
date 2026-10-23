@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:life_preserver"
+        "recipes": "crabbersdelight:life_preserver"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

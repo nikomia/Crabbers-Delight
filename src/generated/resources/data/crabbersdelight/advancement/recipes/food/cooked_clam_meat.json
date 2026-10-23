@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:cooked_clam_meat"
+        "recipes": "crabbersdelight:cooked_clam_meat"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

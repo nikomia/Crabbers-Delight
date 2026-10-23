@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "crabbersdelight:clawster_barrel"
-    }
+    "crabbersdelight:clawster_barrel"
   ],
   "result": {
     "count": 9,

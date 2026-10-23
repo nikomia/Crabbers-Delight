@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:automatic_lure"
+        "recipes": "crabbersdelight:automatic_lure"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

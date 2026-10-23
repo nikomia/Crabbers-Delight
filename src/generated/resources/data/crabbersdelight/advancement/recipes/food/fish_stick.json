@@ -19,7 +19,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:fish_stick"
+        "recipes": "crabbersdelight:fish_stick"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

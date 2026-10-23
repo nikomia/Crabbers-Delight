@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:nautilus_shell_block"
+        "recipes": "crabbersdelight:nautilus_shell_block"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -3,18 +3,10 @@
   "cookingtime": 100,
   "experience": 0.35,
   "ingredients": [
-    {
-      "tag": "c:foods/raw_fish"
-    },
-    {
-      "tag": "c:foods/raw_fish"
-    },
-    {
-      "tag": "c:foods/raw_fish"
-    },
-    {
-      "item": "farmersdelight:wheat_dough"
-    }
+    "#c:foods/raw_fish",
+    "#c:foods/raw_fish",
+    "#c:foods/raw_fish",
+    "farmersdelight:wheat_dough"
   ],
   "recipe_book_tab": "meals",
   "result": {

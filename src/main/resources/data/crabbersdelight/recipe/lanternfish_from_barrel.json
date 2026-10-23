@@ -8,9 +8,7 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "crabbersdelight:lanternfish_barrel"
-    }
+    "crabbersdelight:lanternfish_barrel"
   ],
   "result": {
     "count": 9,

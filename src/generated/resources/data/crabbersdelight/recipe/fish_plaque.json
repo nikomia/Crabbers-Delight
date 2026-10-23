@@ -2,15 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "g": {
-      "item": "minecraft:gold_nugget"
-    },
-    "p": {
-      "tag": "minecraft:planks"
-    },
-    "s": {
-      "item": "minecraft:stick"
-    }
+    "g": "minecraft:gold_nugget",
+    "p": "#minecraft:planks",
+    "s": "minecraft:stick"
   },
   "pattern": [
     " s ",

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:bucket_of_shrimp_chum"
+        "recipes": "crabbersdelight:bucket_of_shrimp_chum"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

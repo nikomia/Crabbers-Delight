@@ -1,30 +1,30 @@
 package alabaster.crabbersdelight.common.worldgen;
 
 import alabaster.crabbersdelight.common.registry.CDModBlocks;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
-import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
-public class WormyDirtFeature extends Feature<NoneFeatureConfiguration> {
+public record WormyDirtFeature() implements Feature {
+    public static final MapCodec<WormyDirtFeature> CODEC = MapCodec.unit(WormyDirtFeature::new);
+
     private static final int MIN_GROUP_SIZE = 1;
     private static final int MAX_GROUP_SIZE = 3;
     private static final int SEARCH_DEPTH_BELOW_ORIGIN = 8;
 
-    public WormyDirtFeature() {
-        super(NoneFeatureConfiguration.CODEC);
+    @Override
+    public MapCodec<WormyDirtFeature> codec() {
+        return CODEC;
     }
 
     @Override
-    public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
-        WorldGenLevel level = context.level();
-        RandomSource random = context.random();
-        BlockPos origin = context.origin();
-        int minY = Math.max(level.getMinBuildHeight(), origin.getY() - SEARCH_DEPTH_BELOW_ORIGIN);
+    public boolean place(WorldGenLevel level, ChunkGenerator chunkGenerator, RandomSource random, BlockPos origin) {
+        int minY = Math.max(level.getMinY(), origin.getY() - SEARCH_DEPTH_BELOW_ORIGIN);
 
         BlockPos chosen = null;
         int dirtSeen = 0;
@@ -43,19 +43,14 @@ public class WormyDirtFeature extends Feature<NoneFeatureConfiguration> {
             return false;
         }
 
-        placeGroup(level, chosen, random);
-        return true;
-    }
-
-    private void placeGroup(WorldGenLevel level, BlockPos start, RandomSource random) {
         int groupSize = MIN_GROUP_SIZE + random.nextInt(MAX_GROUP_SIZE - MIN_GROUP_SIZE + 1);
-        BlockPos.MutableBlockPos cursor = start.mutable();
+        BlockPos.MutableBlockPos groupCursor = chosen.mutable();
         for (int i = 0; i < groupSize; i++) {
-            if (level.getBlockState(cursor).is(Blocks.DIRT)) {
-                setBlock(level, cursor, CDModBlocks.WORMY_DIRT.get().defaultBlockState());
+            if (level.getBlockState(groupCursor).is(Blocks.DIRT)) {
+                setBlock(level, groupCursor, CDModBlocks.WORMY_DIRT.get().defaultBlockState());
             }
-            Direction dir = Direction.Plane.HORIZONTAL.getRandomDirection(random);
-            cursor.move(dir);
+            groupCursor.move(Direction.Plane.HORIZONTAL.getRandomDirection(random));
         }
+        return true;
     }
 }

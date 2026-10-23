@@ -1,9 +1,7 @@
 {
   "type": "farmersdelight:cutting",
   "ingredients": [
-    {
-      "item": "minecraft:cod"
-    }
+    "minecraft:cod"
   ],
   "result": [
     {
@@ -14,12 +12,9 @@
     },
     {
       "item": {
-        "count": 1,
         "id": "crabbersdelight:fish_bones"
       }
     }
   ],
-  "tool": {
-    "tag": "c:tools/knife"
-  }
+  "tool": "#c:tools/knife"
 }

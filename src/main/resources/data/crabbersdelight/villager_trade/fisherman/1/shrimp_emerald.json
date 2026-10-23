@@ -1,0 +1,12 @@
+{
+  "gives": {
+    "id": "minecraft:emerald"
+  },
+  "max_uses": 16,
+  "reputation_discount": 0.05,
+  "wants": {
+    "id": "crabbersdelight:shrimp",
+    "count": 8
+  },
+  "xp": 2
+}

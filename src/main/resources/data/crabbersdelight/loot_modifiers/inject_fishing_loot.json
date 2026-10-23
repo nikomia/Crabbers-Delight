@@ -1,10 +1,8 @@
 {
   "type": "neoforge:add_table",
-  "conditions": [
-    {
-      "condition": "neoforge:loot_table_id",
-      "loot_table_id": "minecraft:gameplay/fishing/junk"
-    }
-  ],
-  "table": "crabbersdelight:gameplay/fishing/fishing"
+  "table": "crabbersdelight:gameplay/fishing/fishing",
+  "condition": {
+    "type": "neoforge:loot_table_id",
+    "loot_table_id": "minecraft:gameplay/fishing/junk"
+  }
 }

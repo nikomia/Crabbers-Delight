@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:scute_block"
+        "recipes": "crabbersdelight:scute_block"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

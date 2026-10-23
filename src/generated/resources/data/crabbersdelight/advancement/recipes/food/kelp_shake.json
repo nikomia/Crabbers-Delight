@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:kelp_shake"
+        "recipes": "crabbersdelight:kelp_shake"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

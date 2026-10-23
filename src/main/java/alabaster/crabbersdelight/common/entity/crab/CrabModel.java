@@ -1,66 +1,31 @@
 package alabaster.crabbersdelight.common.entity.crab;
 
 import alabaster.crabbersdelight.CrabbersDelight;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
-import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.animation.KeyframeAnimation;
+import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
-public class CrabModel<T extends CrabEntity> extends HierarchicalModel<T> {
+public class CrabModel extends EntityModel<CrabRenderState> {
 
 	public static final ModelLayerLocation LAYER_LOCATION =
-			new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(CrabbersDelight.MODID, "crab"), "main");
+			new ModelLayerLocation(CrabbersDelight.modPrefix("crab"), "main");
 
-	private static final float SIDEWAYS_ROTATION_DEGREES = 90f;
+	// The model is authored facing sideways; crabs walk that way
+	private static final float SIDEWAYS_ROTATION = (float) Math.PI / 2F;
 
 	private final ModelPart crab;
-	private final ModelPart fullbody;
-	private final ModelPart eye;
-	private final ModelPart bigclaw;
-	private final ModelPart bigclawbottom;
-	private final ModelPart bigclawtop;
-	private final ModelPart smallclaw;
-	private final ModelPart antenna;
-	private final ModelPart rantenna;
-	private final ModelPart rantenna2;
-	private final ModelPart bodybase;
-	private final ModelPart legs;
-	private final ModelPart rlegs;
-	private final ModelPart rleg1;
-	private final ModelPart rleg2;
-	private final ModelPart rleg3;
-	private final ModelPart llegs;
-	private final ModelPart lleg1;
-	private final ModelPart lleg2;
-	private final ModelPart lleg3;
+	private final KeyframeAnimation walkAnimation;
+	private final KeyframeAnimation idleAnimation;
 
 	public CrabModel(ModelPart root) {
+		super(root);
 		this.crab = root.getChild("crab");
-		this.fullbody = this.crab.getChild("fullbody");
-		this.eye = this.fullbody.getChild("eye");
-		this.bigclaw = this.fullbody.getChild("bigclaw");
-		this.bigclawbottom = this.bigclaw.getChild("bigclawbottom");
-		this.bigclawtop = this.bigclaw.getChild("bigclawtop");
-		this.smallclaw = this.fullbody.getChild("smallclaw");
-		this.antenna = this.fullbody.getChild("antenna");
-		this.rantenna = this.antenna.getChild("rantenna");
-		this.rantenna2 = this.antenna.getChild("rantenna2");
-		this.bodybase = this.fullbody.getChild("bodybase");
-		this.legs = this.crab.getChild("legs");
-		this.rlegs = this.legs.getChild("rlegs");
-		this.rleg1 = this.rlegs.getChild("rleg1");
-		this.rleg2 = this.rlegs.getChild("rleg2");
-		this.rleg3 = this.rlegs.getChild("rleg3");
-		this.llegs = this.legs.getChild("llegs");
-		this.lleg1 = this.llegs.getChild("lleg1");
-		this.lleg2 = this.llegs.getChild("lleg2");
-		this.lleg3 = this.llegs.getChild("lleg3");
+		this.walkAnimation = CrabAnimations.walk.bake(root);
+		this.idleAnimation = CrabAnimations.idle.bake(root);
 	}
 
 	public static LayerDefinition createBodyLayer() {
@@ -134,31 +99,14 @@ public class CrabModel<T extends CrabEntity> extends HierarchicalModel<T> {
 	}
 
 	@Override
-	public void setupAnim(CrabEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-		this.root().getAllParts().forEach(ModelPart::resetPose);
-		this.applyHeadRotation(netHeadYaw, headPitch);
-		this.animateWalk(CrabAnimations.walk, limbSwing, limbSwingAmount, 2f, 5f);
-		this.animate(entity.idleAnimationState, CrabAnimations.idle, ageInTicks, 1f);
-	}
-
-	private void applyHeadRotation(float headYaw, float headPitch) {
-		headYaw = Mth.clamp(headYaw, -30f, 30f);
-		headPitch = Mth.clamp(headPitch, -25f, 45);
-
-		this.crab.yRot = headYaw * ((float)Math.PI / 180f);
-		this.crab.xRot = headPitch *  ((float)Math.PI / 180f);
-	}
-
-	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-		poseStack.pushPose();
-		poseStack.mulPose(Axis.YP.rotationDegrees(SIDEWAYS_ROTATION_DEGREES));
-		crab.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
-		poseStack.popPose();
-	}
-
-	@Override
-	public ModelPart root() {
-		return crab;
+	public void setupAnim(CrabRenderState state) {
+		super.setupAnim(state);
+		this.root().yRot = SIDEWAYS_ROTATION;
+		float headYaw = Mth.clamp(state.yRot, -30f, 30f);
+		float headPitch = Mth.clamp(state.xRot, -25f, 45f);
+		this.crab.yRot = headYaw * Mth.DEG_TO_RAD;
+		this.crab.xRot = headPitch * Mth.DEG_TO_RAD;
+		this.walkAnimation.applyWalk(state.walkAnimationPos, state.walkAnimationSpeed, 2f, 5f);
+		this.idleAnimation.apply(state.idleAnimationState, state.ageInTicks);
 	}
 }

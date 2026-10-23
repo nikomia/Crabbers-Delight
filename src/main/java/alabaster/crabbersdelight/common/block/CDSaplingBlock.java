@@ -18,13 +18,8 @@ public class CDSaplingBlock extends SaplingBlock {
         this.blockToSurviveOn = block;
     }
 
-
     @Override
     protected boolean mayPlaceOn(BlockState state, BlockGetter level, BlockPos pos) {
-        Block block = state.getBlock();
-
-        return blockToSurviveOn.get() == block ||
-                state.is(BlockTags.DIRT) ||   // includes dirt, coarse dirt, podzol, etc.
-                state.is(BlockTags.SAND);    // includes sand and red sand
+        return state.is(blockToSurviveOn.get()) || state.is(BlockTags.DIRT) || state.is(BlockTags.SAND);
     }
 }

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:cooked_tropical_fish_slice"
+        "recipes": "crabbersdelight:cooked_tropical_fish_slice"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

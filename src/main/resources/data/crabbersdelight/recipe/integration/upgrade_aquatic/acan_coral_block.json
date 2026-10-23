@@ -8,12 +8,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "c": {
-      "item": "crabbersdelight:coral_fragments"
-    },
-    "d": {
-      "item": "minecraft:cyan_dye"
-    }
+    "c": "crabbersdelight:coral_fragments",
+    "d": "minecraft:cyan_dye"
   },
   "pattern": [
     " c ",
@@ -21,7 +17,6 @@
     " c "
   ],
   "result": {
-    "count": 1,
     "id": "upgrade_aquatic:acan_coral_block"
   }
 }

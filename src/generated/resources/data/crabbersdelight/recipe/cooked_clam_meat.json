@@ -3,11 +3,8 @@
   "category": "food",
   "cookingtime": 200,
   "experience": 0.35,
-  "ingredient": {
-    "item": "crabbersdelight:raw_clam_meat"
-  },
+  "ingredient": "crabbersdelight:raw_clam_meat",
   "result": {
-    "count": 1,
     "id": "crabbersdelight:cooked_clam_meat"
   }
 }

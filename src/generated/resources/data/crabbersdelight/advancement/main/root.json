@@ -6,7 +6,7 @@
   },
   "display": {
     "announce_to_chat": false,
-    "background": "minecraft:textures/block/sand.png",
+    "background": "minecraft:block/sand",
     "description": {
       "translate": "crabbersdelight.advancement.root.desc"
     },

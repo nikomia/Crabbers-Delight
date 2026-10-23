@@ -1,16 +1,21 @@
 package alabaster.crabbersdelight.common.block.entity;
 
+import alabaster.crabbersdelight.common.item.component.NoteContent;
+import alabaster.crabbersdelight.common.item.component.SignedNoteContent;
 import alabaster.crabbersdelight.common.registry.CDModBlockEntity;
+import alabaster.crabbersdelight.common.registry.CDModDataComponents;
+import alabaster.crabbersdelight.common.registry.CDModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.Containers;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import org.jspecify.annotations.Nullable;
 
 public class NoteBlockEntity extends BlockEntity {
     private String text = "";
@@ -60,52 +65,60 @@ public class NoteBlockEntity extends BlockEntity {
         setChanged();
     }
 
+    // The block has no loot table: the note itself is returned when the block goes away
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.putString("Text", text);
-        tag.putString("Author", author);
-        tag.putString("Title", title);
-        tag.putInt("Generation", generation);
-        tag.putBoolean("Signed", signed);
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        if (level != null) {
+            ItemStack drop = signed ? signedNoteStack() : unsignedNoteStack();
+            if (drop != null) {
+                Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, drop);
+            }
+        }
+        super.preRemoveSideEffects(pos, state);
+    }
+
+    private @Nullable ItemStack unsignedNoteStack() {
+        if (text.isEmpty()) {
+            return null;
+        }
+        ItemStack stack = new ItemStack(CDModItems.NOTE.get());
+        stack.set(CDModDataComponents.NOTE_CONTENT.get(), new NoteContent(text));
+        return stack;
+    }
+
+    private ItemStack signedNoteStack() {
+        ItemStack stack = new ItemStack(CDModItems.SIGNED_NOTE.get());
+        stack.set(CDModDataComponents.SIGNED_NOTE_CONTENT.get(), new SignedNoteContent(title, text, author, generation));
+        return stack;
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        text = tag.getString("Text");
-        author = tag.getString("Author");
-        title = tag.getString("Title");
-        generation = tag.getInt("Generation");
-        signed = tag.getBoolean("Signed");
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        output.putString("Text", text);
+        output.putString("Author", author);
+        output.putString("Title", title);
+        output.putInt("Generation", generation);
+        output.putBoolean("Signed", signed);
+    }
+
+    @Override
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        text = input.getStringOr("Text", "");
+        author = input.getStringOr("Author", "");
+        title = input.getStringOr("Title", "");
+        generation = input.getIntOr("Generation", 0);
+        signed = input.getBooleanOr("Signed", false);
     }
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        CompoundTag tag = new CompoundTag();
-        tag.putString("Text", text);
-        tag.putString("Author", author);
-        tag.putString("Title", title);
-        tag.putInt("Generation", generation);
-        tag.putBoolean("Signed", signed);
-        return tag;
+        return saveWithoutMetadata(registries);
     }
 
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider lookupProvider) {
-        CompoundTag tag = pkt.getTag();
-        if (tag != null) {
-            loadAdditional(tag, lookupProvider);
-        }
-    }
-
-    @Override
-    public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
-        loadAdditional(tag, registries);
-    }
-
-    @Override
-    public @Nullable Packet<ClientGamePacketListener> getUpdatePacket() {
+    public @Nullable ClientboundBlockEntityDataPacket getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
     }
 }

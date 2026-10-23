@@ -2,21 +2,11 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "I": {
-      "item": "minecraft:iron_ingot"
-    },
-    "i": {
-      "item": "minecraft:iron_nugget"
-    },
-    "o": {
-      "item": "minecraft:observer"
-    },
-    "r": {
-      "item": "minecraft:redstone"
-    },
-    "t": {
-      "item": "minecraft:tripwire_hook"
-    }
+    "I": "minecraft:iron_ingot",
+    "i": "minecraft:iron_nugget",
+    "o": "minecraft:observer",
+    "r": "minecraft:redstone",
+    "t": "minecraft:tripwire_hook"
   },
   "pattern": [
     " i ",
@@ -24,7 +14,6 @@
     "rot"
   ],
   "result": {
-    "count": 1,
     "id": "crabbersdelight:automatic_lure"
   }
 }

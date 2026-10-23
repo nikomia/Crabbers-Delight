@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "crabbersdelight:cooked_squid_tentacles"
+        "recipes": "crabbersdelight:cooked_squid_tentacles"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
