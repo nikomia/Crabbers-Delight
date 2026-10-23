@@ -103,7 +103,7 @@
   "tooltip.farmersdelight.coconut_milk": "Снимает 1 эффект",
   "item.crabbersdelight.coconut_pudding": "Кокосовый пудинг",
 
-  "block.crabbersdelight.crab_trap": "Крабовая ловушка",
+  "block.crabbersdelight.crab_trap": "Краболовка",
   "block.crabbersdelight.crab_barrel": "Бочка с крабами",
   "block.crabbersdelight.clam_barrel": "Бочка с моллюсками",
   "block.crabbersdelight.clawster_barrel": "Бочка с клешнехватами",
@@ -208,7 +208,7 @@
 
   "entity.crabbersdelight.crab": "Краб",
 
-  "crabbersdelight.jei.crab_trap_loot": "Крабовая ловушка",
+  "crabbersdelight.jei.crab_trap_loot": "Краболовка",
   "gui.crabbersdelight.jei.note_cloning": "Дублирование записки",
   "gui.crabbersdelight.jei.bottled_note": "Записку в бутылку",
 
@@ -216,7 +216,7 @@
   "crabbersdelight.advancement.root.desc": "Вас ждут приключения с морепродуктами!",
 
   "crabbersdelight.advancement.craft_crab_trap": "Это ловушка!",
-  "crabbersdelight.advancement.craft_crab_trap.desc": "Используйте страховочную сеть, плиты и палки, чтобы сделать свою первую крабовую ловушку",
+  "crabbersdelight.advancement.craft_crab_trap.desc": "Используйте страховочную сеть, плиты и палки, чтобы сделать свою первую краболовку",
 
   "crabbersdelight.advancement.cook_crustaceans": "Время ракообразных",
   "crabbersdelight.advancement.cook_crustaceans.desc": "Приготовьте крабов, креветок и лобстеров, отварив их в кухонном котле",
@@ -261,7 +261,7 @@
   "tag.item.crabbersdelight.cooked_squid": "Жареный спрут",
 
   "tag.item.crabbersdelight.crab_tempt_item": "Нравится крабам",
-  "tag.item.crabbersdelight.crab_trap_bait": "Приманка для крабовой ловушки",
+  "tag.item.crabbersdelight.crab_trap_bait": "Приманка для краболовки",
 
   "tag.item.crabbersdelight.creature_chums": "Приманка существ",
 
