@@ -240,6 +240,8 @@ public class FishPlaqueRenderer implements BlockEntityRenderer<FishPlaqueBlockEn
         if (entity == null) {
             return null;
         }
+        // Like vanilla spawner display entities: renderers read the id, which is unassigned outside a level.
+        entity.setId(-1);
 
         CompoundTag data = be.getEntityData();
         if (!data.isEmpty()) {
