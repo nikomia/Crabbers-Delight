@@ -1,0 +1,26 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "friendsandfoes"
+    }
+  ],
+  "type": "minecraft:brewing",
+  "input": {
+    "item": "minecraft:potion",
+    "potion_contents": {
+      "potions": "minecraft:awkward"
+    }
+  },
+  "output": {
+    "components": {
+      "minecraft:potion_contents": {
+        "potion": "friendsandfoes:reaching"
+      }
+    },
+    "id": "minecraft:potion"
+  },
+  "reagent": {
+    "item": "crabbersdelight:crab_claw"
+  }
+}
