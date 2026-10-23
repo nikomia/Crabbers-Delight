@@ -1,6 +1,7 @@
 package alabaster.crabbersdelight.common.fluid;
 
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid;
@@ -39,5 +40,19 @@ public class CDFluidType extends BaseFlowingFluid {
 
     public Item getBottle() {
         return bottleItem.get();
+    }
+
+    // Like BaseFlowingFluid.Flowing: the flowing variant needs the LEVEL property (getAmount reads it for every state).
+    public static class Flowing extends CDFluidType {
+        public Flowing(BaseFlowingFluid.Properties properties, Supplier<? extends Item> bottleItem) {
+            super(properties, false, bottleItem);
+            registerDefaultState(getStateDefinition().any().setValue(LEVEL, 7));
+        }
+
+        @Override
+        protected void createFluidStateDefinition(StateDefinition.Builder<Fluid, FluidState> builder) {
+            super.createFluidStateDefinition(builder);
+            builder.add(LEVEL);
+        }
     }
 }

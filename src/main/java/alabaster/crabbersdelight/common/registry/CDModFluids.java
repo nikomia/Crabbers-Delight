@@ -28,7 +28,7 @@ public class CDModFluids {
         holders[0] = FLUIDS.register(name, () ->
                 new CDFluidType(new BaseFlowingFluid.Properties(type, holders[0], holders[1]), true, bottleItem));
         holders[1] = FLUIDS.register("flowing_" + name, () ->
-                new CDFluidType(new BaseFlowingFluid.Properties(type, holders[0], holders[1]), false, bottleItem));
+                new CDFluidType.Flowing(new BaseFlowingFluid.Properties(type, holders[0], holders[1]), bottleItem));
         return new FluidEntry(type, holders[0], holders[1]);
     }
 
