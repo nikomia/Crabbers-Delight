@@ -38,8 +38,12 @@ public class CDLeavesBlock extends LeavesBlock {
 
     @Override
     protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        if (state.getValue(GENERATED) && !hasPalmLogNearby(level, pos, 4)) {
-            level.destroyBlock(pos, true);
+        if (state.getValue(GENERATED)) {
+            // Generated palm leaves live by the palm log rule; diagonal fronds have no face-connected path to the trunk
+            // (distance 7), and the vanilla tick on Purpur (leaves.instant-decay) would remove them at once.
+            if (!hasPalmLogNearby(level, pos, 4)) {
+                level.destroyBlock(pos, true);
+            }
             return;
         }
         super.tick(state, level, pos, random);
